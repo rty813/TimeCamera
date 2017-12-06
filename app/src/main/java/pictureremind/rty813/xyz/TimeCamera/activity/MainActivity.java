@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
             mainFragment.setSwipeItemClickListener(new MainFragment.onSwipeItemClickListener() {
                 @Override
                 public void onItemClick(View viewItem, int position) {
+
                     cameraFragment = new CameraFragment();
                     cameraFragment.setOnClickListener(MainActivity.this);
                     getSupportFragmentManager().beginTransaction()
