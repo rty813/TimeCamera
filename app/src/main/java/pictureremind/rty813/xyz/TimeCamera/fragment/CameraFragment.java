@@ -1,6 +1,9 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -41,6 +44,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.Toast;
 
 import com.example.android.camera2basic.AutoFitTextureView;
@@ -118,6 +122,25 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
      * Max preview height that is guaranteed by Camera2 API
      */
     private static final int MAX_PREVIEW_HEIGHT = 1080;
+
+//    @Override
+//    public Animator onCreateAnimator(int transit, boolean enter, int nextAnim) {
+//        Animator anim = AnimatorInflater.loadAnimator(getActivity(), nextAnim);
+//        anim.addListener(new AnimatorListenerAdapter() {
+//            @Override
+//            public void onAnimationEnd(Animator animation) {
+//                super.onAnimationEnd(animation);
+//                System.out.println("animation End");
+//                startBackgroundThread();
+//                if (mTextureView.isAvailable()) {
+//                    openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+//                } else {
+//                    mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+//                }
+//            }
+//        });
+//        return anim;
+//    }
 
     /**
      * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
@@ -338,6 +361,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         }
 
     };
+    private OnBtnClickListener btnListener;
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -419,6 +443,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         view.findViewById(R.id.picture).setOnClickListener(this);
         view.findViewById(R.id.info).setOnClickListener(this);
+        view.findViewById(R.id.btn_return).setOnClickListener(this);
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
     }
 
@@ -431,12 +456,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     @Override
     public void onResume() {
         super.onResume();
+        System.out.println("onResume");
         startBackgroundThread();
-
-        // When the screen is turned off and turned back on, the SurfaceTexture is already
-        // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
-        // a camera and start preview from here (otherwise, we wait until the surface is ready in
-        // the SurfaceTextureListener).
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
         } else {
@@ -893,6 +914,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                 break;
             }
             case R.id.btn_return:
+                this.btnListener.onClick(view);
                 break;
         }
     }
@@ -1024,5 +1046,13 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                             })
                     .create();
         }
+    }
+
+    public interface OnBtnClickListener{
+        public void onClick(View v);
+    }
+
+    public void setOnClickListener(OnBtnClickListener onClickListener){
+        this.btnListener = onClickListener;
     }
 }

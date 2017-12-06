@@ -12,10 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="pictureremind.rty813.xyz.TimeCamera.TestActivity">
+        <activity android:name="pictureremind.rty813.xyz.TimeCamera.activity.TestActivity">
 
         </activity>
-        <activity android:name="pictureremind.rty813.xyz.TimeCamera.MainActivity">
+        <activity android:name="pictureremind.rty813.xyz.TimeCamera.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

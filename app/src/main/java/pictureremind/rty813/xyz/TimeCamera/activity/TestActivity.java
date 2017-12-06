@@ -1,4 +1,4 @@
-package pictureremind.rty813.xyz.TimeCamera;
+package pictureremind.rty813.xyz.TimeCamera.activity;
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -24,6 +24,8 @@ import android.view.TextureView;
 import android.widget.Toast;
 
 import java.util.Arrays;
+
+import pictureremind.rty813.xyz.TimeCamera.R;
 
 public class TestActivity extends AppCompatActivity {
     private TextureView textureView;

@@ -3,8 +3,11 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CameraTool/CameraTool.iml" filepath="$PROJECT_DIR$/CameraTool/CameraTool.iml" />
-      <module fileurl="file://$PROJECT_DIR$/PictureRemind.iml" filepath="$PROJECT_DIR$/PictureRemind.iml" />
+      <module fileurl="file://C:\Users\doufu\AndroidStudioProjects\TimeCamera\CameraTool\CameraTool.iml" filepath="C:\Users\doufu\AndroidStudioProjects\TimeCamera\CameraTool\CameraTool.iml" />
+      <module fileurl="file://C:\Users\doufu\AndroidStudioProjects\TimeCamera\PictureRemind.iml" filepath="C:\Users\doufu\AndroidStudioProjects\TimeCamera\PictureRemind.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TimeCamera.iml" filepath="$PROJECT_DIR$/TimeCamera.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\doufu\AndroidStudioProjects\TimeCamera\app\app.iml" filepath="C:\Users\doufu\AndroidStudioProjects\TimeCamera\app\app.iml" />
     </modules>
   </component>
 </project>
