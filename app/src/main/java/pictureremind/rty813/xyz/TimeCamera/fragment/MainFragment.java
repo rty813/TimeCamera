@@ -1,5 +1,6 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,7 +10,6 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.yanzhenjie.recyclerview.swipe.SwipeItemClickListener;
 import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
@@ -27,7 +27,7 @@ import pictureremind.rty813.xyz.TimeCamera.R;
  */
 
 public class MainFragment extends Fragment implements View.OnClickListener, OnItemMoveListener {
-    private onBtnClickListener btnListener;
+    private onBtnClickListener mListener;
     private SwipeMenuRecyclerView recyclerView;
     private RecyclerviewAdapter adapter;
     private ArrayList<Map<String, String>> list;
@@ -90,10 +90,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.button:
-                this.btnListener.onClick(view);
+                this.mListener.onClick(view);
                 break;
             case R.id.btn_insert:
-                Toast.makeText(getActivity(), "新建相册",Toast.LENGTH_SHORT).show();
+                this.mListener.onClick(view);
                 break;
         }
     }
@@ -107,13 +107,20 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
     public void onItemDismiss(RecyclerView.ViewHolder srcHolder) {
 
     }
-
-    public interface onBtnClickListener{
-        public void onClick(View v);
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof onBtnClickListener) {
+            mListener = (onBtnClickListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
     }
-
-    public void setOnBtnClickListener(onBtnClickListener btnListener){
-        this.btnListener = btnListener;
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     public interface onSwipeItemClickListener{
@@ -122,5 +129,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
 
     public void setSwipeItemClickListener(onSwipeItemClickListener listener){
         this.swipeItemClickListener = listener;
+    }
+
+
+    public interface onBtnClickListener{
+        public void onClick(View v);
     }
 }

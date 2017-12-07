@@ -4,6 +4,7 @@
     <string name="description_info">Info</string>
     <string name="request_permission">This sample needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+
     <string name="intro_message">
         <![CDATA[
 
@@ -15,4 +16,9 @@
         ]]>
     </string>
     <string name="btn_shot">拍照</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="insert_name">相册名称</string>
+    <string name="insert_cyc">请选择周期</string>
 </resources>
