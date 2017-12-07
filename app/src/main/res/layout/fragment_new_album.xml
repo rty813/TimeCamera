@@ -33,10 +33,12 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/insert_name"
                 />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginTop="20dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -52,21 +54,25 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginTop="20dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="提醒时间"/>
-                <EditText
+                    android:layout_gravity="center_vertical"
+                    android:text="选择提醒时间"/>
+                <ImageButton
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/insert"
+                    android:id="@+id/btn_picktime"
+                    android:scaleType="fitXY"/>
             </LinearLayout>
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:id="@+id/insert_container"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginTop="20dp"
                 android:background="#76000000">
                 <ImageView
                     android:layout_width="wrap_content"

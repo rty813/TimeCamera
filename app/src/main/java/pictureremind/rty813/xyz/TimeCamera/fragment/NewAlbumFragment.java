@@ -1,14 +1,22 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
+import android.app.AlertDialog;
 import android.content.Context;
-import android.net.Uri;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.format.Time;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 
@@ -16,7 +24,7 @@ import pictureremind.rty813.xyz.TimeCamera.R;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link NewAlbumFragment.OnFragmentInteractionListener} interface
+ * {@link NewAlbumFragment.onBtnClickListener} interface
  * to handle interaction events.
  * Use the {@link NewAlbumFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -30,6 +38,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private String str_cyc = "每周";
 
     private onBtnClickListener mListener;
 
@@ -75,6 +84,19 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         view.findViewById(R.id.insert_container).setOnClickListener(this);
+        view.findViewById(R.id.btn_picktime).setOnClickListener(this);
+        ((Spinner)view.findViewById(R.id.spinner_cyc)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String[] cycs = getResources().getStringArray(R.array.cyc);
+                str_cyc = cycs[i];
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
 
@@ -97,7 +119,52 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        mListener.onClick(view);
+        switch (view.getId()){
+            case R.id.insert_container:
+                mListener.onClick(view);
+                break;
+            case R.id.btn_picktime:
+                Toast.makeText(getActivity(), str_cyc, Toast.LENGTH_SHORT).show();
+
+                Time t=new Time();
+                t.setToNow();
+                DialogInterface.OnClickListener listener = null;
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                        .setTitle("提醒时间")
+                        .setNegativeButton("取消", null)
+                        .setCancelable(true);
+                switch (str_cyc){
+                    case "每周":
+                        builder.setView(R.layout.numberpicker_week);
+                        listener = new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
+                            }
+                        };
+                        break;
+                    case "每月":
+                        break;
+                    case "每年":
+
+                        break;
+                    case "每天":
+                        builder.setView(R.layout.numberpicker_day);
+                        listener = new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Toast.makeText(getActivity(), "每天！", Toast.LENGTH_SHORT).show();
+                            }
+                        };
+                        break;
+                    case "每小时":
+
+                        break;
+                }
+                builder.setPositiveButton("确定", listener);
+                builder.show();
+                break;
+        }
     }
 
     public interface onBtnClickListener{
