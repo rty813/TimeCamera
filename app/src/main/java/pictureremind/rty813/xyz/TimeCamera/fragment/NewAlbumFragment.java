@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -125,7 +126,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.btn_picktime:
                 Toast.makeText(getActivity(), str_cyc, Toast.LENGTH_SHORT).show();
-
+                View numberpicker = null;
                 Time t=new Time();
                 t.setToNow();
                 DialogInterface.OnClickListener listener = null;
@@ -135,34 +136,72 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         .setCancelable(true);
                 switch (str_cyc){
                     case "每周":
-                        builder.setView(R.layout.numberpicker_week);
-                        listener = new DialogInterface.OnClickListener() {
+                        numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_week, null);
+                        builder.setView(numberpicker);
+                        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
                             }
-                        };
+                        });
                         break;
                     case "每月":
+                        numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_month, null);
+                        builder.setView(numberpicker);
+                        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         break;
                     case "每年":
-
+                        numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_year, null);
+                        builder.setView(numberpicker);
+                        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         break;
                     case "每天":
+                        numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_day, null);
                         builder.setView(R.layout.numberpicker_day);
-                        listener = new DialogInterface.OnClickListener() {
+                        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getActivity(), "每天！", Toast.LENGTH_SHORT).show();
                             }
-                        };
+                        });
                         break;
                     case "每小时":
 
                         break;
                 }
-                builder.setPositiveButton("确定", listener);
+                if (numberpicker.findViewById(R.id.np_hour) != null){
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_hour)).setMaxValue(23);
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_hour)).setMinValue(0);
+                }
+                if (numberpicker.findViewById(R.id.np_week) != null){
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_week)).setMaxValue(7);
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_week)).setMinValue(1);
+                }
+                if (numberpicker.findViewById(R.id.np_day) != null){
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_day)).setMaxValue(31);
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_day)).setMinValue(1);
+                }
+                if (numberpicker.findViewById(R.id.np_minute) != null){
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_minute)).setMaxValue(59);
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_minute)).setMinValue(0);
+                }
+                if (numberpicker.findViewById(R.id.np_month) != null){
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_month)).setMaxValue(12);
+                    ((NumberPicker)numberpicker.findViewById(R.id.np_month)).setMinValue(1);
+                }
+
                 builder.show();
+
                 break;
         }
     }

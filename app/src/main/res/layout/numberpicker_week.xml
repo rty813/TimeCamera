@@ -11,8 +11,9 @@
         android:layout_gravity="center_vertical"
         android:text="星期"/>
     <NumberPicker
-        android:layout_width="wrap_content"
+        android:layout_width="30dp"
         android:layout_marginLeft="5dp"
+        android:id="@+id/np_week"
         android:layout_height="wrap_content">
     </NumberPicker>
 
@@ -24,8 +25,9 @@
         android:text="小时"/>
     <NumberPicker
         android:layout_marginLeft="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/np_hour">
     </NumberPicker>
 
     <TextView
@@ -36,8 +38,9 @@
         android:text="分钟"/>
     <NumberPicker
         android:layout_marginLeft="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/np_minute">
     </NumberPicker>
 
 
