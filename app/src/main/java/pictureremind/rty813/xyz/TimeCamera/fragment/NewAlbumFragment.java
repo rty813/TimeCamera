@@ -160,6 +160,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 mListener.onClick(view);
                 break;
             case R.id.btn_picktime:
+                iv_preview.setImageResource(R.drawable.insert);
                 Toast.makeText(getActivity(), str_cyc, Toast.LENGTH_SHORT).show();
                 View numberpicker = null;
                 Time t=new Time();
@@ -267,7 +268,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(getActivity(), "Pic!", Toast.LENGTH_SHORT).show();
+//                System.out.println(filepath);
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeFile(file.getAbsolutePath(), options);
@@ -276,9 +277,10 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 float prop = (float)options.outHeight / options.outWidth;
                 height = (int)(width * prop) > height ? (int)(width * prop) : height;
                 width  = (int)(height / prop) > width ? (int)(height / prop) : width;
-                iv_preview.setImageResource(R.drawable.ic_launcher_foreground);
-//                Picasso.with(getActivity()).load(file).resize(width, height)
-//                        .centerInside().into(iv_preview);
+                int rotate = width > height? 90 : 0;
+                System.out.println(height + " " + width + " " + rotate);
+                Picasso.with(getActivity()).load(new File(file.getAbsolutePath())).resize(width, height)
+                        .centerInside().rotate(rotate).placeholder(R.drawable.add).into(iv_preview);
             }
         });
 

@@ -303,7 +303,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             = new CameraCaptureSession.CaptureCallback() {
 
         private void process(CaptureResult result) {
-            System.out.println(mState);
+//            System.out.println(mState);
             switch (mState) {
                 case STATE_PREVIEW: {
                     // We have nothing to do when the camera preview is working normally.
@@ -314,7 +314,9 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                     if (afState == null) {
                         captureStillPicture();
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
-                            CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
+                            CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState ||
+                            CaptureRequest.CONTROL_AF_STATE_PASSIVE_FOCUSED == afState ||
+                            CaptureRequest.CONTROL_AF_STATE_PASSIVE_UNFOCUSED == afState) {
                         // CONTROL_AE_STATE can be null on some devices
                         Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                         if (aeState == null ||
@@ -324,6 +326,9 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                         } else {
                             runPrecaptureSequence();
                         }
+                    }
+                    else{
+                        Log.e("afstate", String.valueOf(afState));
                     }
                     break;
                 }
@@ -846,10 +851,11 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            setAutoFlash(captureBuilder);
+//            setAutoFlash(captureBuilder);
 
             // Orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+            System.out.println("rotation" + rotation);
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
 
             CameraCaptureSession.CaptureCallback CaptureCallback
@@ -862,6 +868,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                     showToast("Saved: " + mFile);
                     Log.d(TAG, mFile.toString());
                     unlockFocus();
+                    System.out.println(mFile.hashCode());
                     mSucceed.onSucceed(mFile);
                 }
             };
