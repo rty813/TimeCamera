@@ -1,47 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal">
 
-    <TextView
+    <cn.carbswang.android.numberpickerview.library.NumberPickerView
+        android:layout_margin="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="星期"/>
-    <NumberPicker
-        android:layout_width="30dp"
-        android:layout_marginLeft="5dp"
-        android:id="@+id/np_week"
-        android:layout_height="wrap_content">
-    </NumberPicker>
+        android:layout_weight="1"
+        android:id="@+id/np_week">
+    </cn.carbswang.android.numberpickerview.library.NumberPickerView>
 
-    <TextView
-        android:layout_marginLeft="20dp"
+    <cn.carbswang.android.numberpickerview.library.NumberPickerView
+        android:layout_margin="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="小时"/>
-    <NumberPicker
-        android:layout_marginLeft="5dp"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:npv_HintText="时"
         android:id="@+id/np_hour">
-    </NumberPicker>
+    </cn.carbswang.android.numberpickerview.library.NumberPickerView>
 
-    <TextView
-        android:layout_marginLeft="20dp"
+    <cn.carbswang.android.numberpickerview.library.NumberPickerView
+        android:layout_margin="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="分钟"/>
-    <NumberPicker
-        android:layout_marginLeft="5dp"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:npv_HintText="分"
         android:id="@+id/np_minute">
-    </NumberPicker>
+    </cn.carbswang.android.numberpickerview.library.NumberPickerView>
 
 
 </LinearLayout>

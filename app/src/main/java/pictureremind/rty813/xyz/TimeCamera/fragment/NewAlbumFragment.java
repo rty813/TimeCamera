@@ -3,24 +3,34 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.NestedScrollView;
 import android.text.format.Time;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.util.ArrayList;
+
+import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import pictureremind.rty813.xyz.TimeCamera.R;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -42,6 +52,10 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     private String str_cyc = "每周";
 
     private onBtnClickListener mListener;
+    private EditText et_albumname;
+    private NestedScrollView nsv_root;
+    private ImageView iv_preview;
+    private FrameLayout insert_container;
 
     public NewAlbumFragment() {
         // Required empty public constructor
@@ -84,13 +98,24 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        view.findViewById(R.id.insert_container).setOnClickListener(this);
+        insert_container = view.findViewById(R.id.insert_container);
+        iv_preview = view.findViewById(R.id.iv_preview);
+        et_albumname = view.findViewById(R.id.et_albumname);
+        nsv_root = view.findViewById(R.id.nsv_root);
+        final LinearLayout ll_choosetime = view.findViewById(R.id.ll_choosetime);
+        insert_container.setOnClickListener(this);
         view.findViewById(R.id.btn_picktime).setOnClickListener(this);
         ((Spinner)view.findViewById(R.id.spinner_cyc)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String[] cycs = getResources().getStringArray(R.array.cyc);
                 str_cyc = cycs[i];
+                if (str_cyc.equals("每小时")){
+                    ll_choosetime.setVisibility(View.GONE);
+                }
+                else{
+                    ll_choosetime.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
@@ -98,6 +123,16 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
             }
         });
+//        NumberPickerView numberPickerView = view.findViewById(R.id.numberpickerview);
+//        numberPickerView.setOnValueChangedListener(new NumberPickerView.OnValueChangeListener() {
+//            @Override
+//            public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
+//                System.out.println("value changed");
+//            }
+//        });
+//        numberPickerView.setMaxValue(8);
+//        numberPickerView.setMinValue(5);
+//        numberPickerView.setValue(6);
     }
 
 
@@ -129,7 +164,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 View numberpicker = null;
                 Time t=new Time();
                 t.setToNow();
-                DialogInterface.OnClickListener listener = null;
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                         .setTitle("提醒时间")
                         .setNegativeButton("取消", null)
@@ -157,6 +191,24 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         break;
                     case "每年":
                         numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_year, null);
+                        final NumberPickerView npday = numberpicker.findViewById(R.id.np_day);
+                        final int[] monthday = new int[]{31,28,31,30,31,30,31,31,30,31,30,31};
+                        npday.setMaxValue(monthday[t.month], true);
+                        npday.setMinValue(1);
+                        npday.setValue(t.monthDay);
+
+                        ((NumberPickerView)numberpicker.findViewById(R.id.np_month)).setOnValueChangedListener(new NumberPickerView.OnValueChangeListener() {
+                            @Override
+                            public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
+                                ArrayList<String> list = new ArrayList<>();
+                                for (int i = 1; i <= monthday[newVal - 1]; i++){
+                                    list.add(String.valueOf(i));
+                                }
+                                String[] strings = new String[list.size()];
+                                list.toArray(strings);
+                                npday.refreshByNewDisplayedValues(strings);
+                            }
+                        });
                         builder.setView(numberpicker);
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
@@ -167,7 +219,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         break;
                     case "每天":
                         numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_day, null);
-                        builder.setView(R.layout.numberpicker_day);
+                        builder.setView(numberpicker);
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -180,30 +232,56 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         break;
                 }
                 if (numberpicker.findViewById(R.id.np_hour) != null){
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_hour)).setMaxValue(23);
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_hour)).setMinValue(0);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_hour)).setMaxValue(23, true);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_hour)).setMinValue(0);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_hour)).setValue(t.hour);
                 }
                 if (numberpicker.findViewById(R.id.np_week) != null){
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_week)).setMaxValue(7);
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_week)).setMinValue(1);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_week)).setDisplayedValues(new String[]{"星期一",
+                            "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"});
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_week)).setValue(t.weekDay);
                 }
-                if (numberpicker.findViewById(R.id.np_day) != null){
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_day)).setMaxValue(31);
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_day)).setMinValue(1);
+                if (numberpicker.findViewById(R.id.np_day) != null && !str_cyc.equals("每年")){
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_day)).setMaxValue(31, true);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_day)).setMinValue(1);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_day)).setValue(t.monthDay);
                 }
                 if (numberpicker.findViewById(R.id.np_minute) != null){
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_minute)).setMaxValue(59);
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_minute)).setMinValue(0);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_minute)).setMaxValue(59, true);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_minute)).setMinValue(0);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_minute)).setValue(t.minute);
                 }
                 if (numberpicker.findViewById(R.id.np_month) != null){
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_month)).setMaxValue(12);
-                    ((NumberPicker)numberpicker.findViewById(R.id.np_month)).setMinValue(1);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_month)).setMaxValue(12, true);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_month)).setMinValue(1);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_month)).setValue(t.month + 1);
                 }
 
                 builder.show();
 
                 break;
         }
+    }
+
+    public void setAlbumPic(final File file){
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getActivity(), "Pic!", Toast.LENGTH_SHORT).show();
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+                int width = insert_container.getWidth();
+                int height = insert_container.getHeight();
+                float prop = (float)options.outHeight / options.outWidth;
+                height = (int)(width * prop) > height ? (int)(width * prop) : height;
+                width  = (int)(height / prop) > width ? (int)(height / prop) : width;
+                iv_preview.setImageResource(R.drawable.ic_launcher_foreground);
+//                Picasso.with(getActivity()).load(file).resize(width, height)
+//                        .centerInside().into(iv_preview);
+            }
+        });
+
     }
 
     public interface onBtnClickListener{

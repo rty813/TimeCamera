@@ -1,12 +1,15 @@
 package pictureremind.rty813.xyz.TimeCamera.activity;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import java.io.File;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
@@ -15,7 +18,7 @@ import pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment;
 
 public class MainActivity extends AppCompatActivity implements CameraFragment.OnBtnClickListener,
         MainFragment.onBtnClickListener, NewAlbumFragment.onBtnClickListener,
-        MainFragment.onSwipeItemClickListener {
+        MainFragment.onSwipeItemClickListener, CameraFragment.onCaptureSucceed{
 
     MainFragment mainFragment;
     CameraFragment cameraFragment;
@@ -51,11 +54,11 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                 cameraFragment = new CameraFragment();
                 cameraFragment.setOnClickListener(this);
                 getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_camera_enter, R.anim.fm_camera_exit)
+                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                         .hide(mainFragment)
                         .add(R.id.container, cameraFragment)
 //                        .replace(R.id.container, cameraFragment)
-                        .addToBackStack(null)
+                        .addToBackStack("cameraFragment")
                         .commit();
                 break;
             case R.id.btn_return:
@@ -65,14 +68,24 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
             case R.id.btn_insert:
                 newAlbumFragment = NewAlbumFragment.newInstance(null, null);
                 getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_camera_enter, R.anim.fm_camera_exit)
+                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                         .hide(mainFragment)
                         .add(R.id.container, newAlbumFragment)
-                        .addToBackStack(null)
+                        .addToBackStack("newAlbumFragment")
                         .commit();
                 break;
             case R.id.insert_container:
-                Toast.makeText(this, "HH", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, "HH", Toast.LENGTH_SHORT).show();
+
+                cameraFragment = new CameraFragment();
+                cameraFragment.setOnClickListener(this);
+                getSupportFragmentManager().beginTransaction()
+                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
+                        .hide(newAlbumFragment)
+                        .add(R.id.container, cameraFragment)
+//                        .replace(R.id.container, cameraFragment)
+                        .addToBackStack("cameraFragment")
+                        .commit();
                 break;
         }
     }
@@ -92,10 +105,29 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         cameraFragment = new CameraFragment();
         cameraFragment.setOnClickListener(MainActivity.this);
         getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_camera_enter, R.anim.fm_camera_exit)
+                .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                 .hide(mainFragment)
                 .add(R.id.container, cameraFragment)
-                .addToBackStack(null)
+                .addToBackStack("cameraFragment")
                 .commit();
+    }
+
+    @Override
+    public void onSucceed(final File file) {
+        getSupportFragmentManager().popBackStack();
+//        System.out.println(getSupportFragmentManager().getBackStackEntryAt(getSupportFragmentManager().getBackStackEntryCount() - 1).getName());
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!(getSupportFragmentManager().getBackStackEntryCount() == 0)
+                        && getSupportFragmentManager().getBackStackEntryAt(getSupportFragmentManager().getBackStackEntryCount() - 1).getName().equals("newAlbumFragment")){
+                    newAlbumFragment.setAlbumPic(file);
+                    System.out.println("succeed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                }
+            }
+        }, 100);
+
+
     }
 }

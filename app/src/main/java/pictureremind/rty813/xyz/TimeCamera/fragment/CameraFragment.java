@@ -45,6 +45,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.android.camera2basic.AutoFitTextureView;
@@ -75,6 +76,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
+    private Handler handler;
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -301,6 +303,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             = new CameraCaptureSession.CaptureCallback() {
 
         private void process(CaptureResult result) {
+            System.out.println(mState);
             switch (mState) {
                 case STATE_PREVIEW: {
                     // We have nothing to do when the camera preview is working normally.
@@ -362,6 +365,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
 
     };
     private OnBtnClickListener btnListener;
+    private onCaptureSucceed mSucceed;
+    private Button btn_capture;
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -441,6 +446,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
+        btn_capture = view.findViewById(R.id.picture);
         view.findViewById(R.id.picture).setOnClickListener(this);
         view.findViewById(R.id.info).setOnClickListener(this);
         view.findViewById(R.id.btn_return).setOnClickListener(this);
@@ -724,6 +730,12 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         mCaptureCallback, mBackgroundHandler);
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        btn_capture.setEnabled(true);
+                                    }
+                                });
                             } catch (CameraAccessException e) {
                                 e.printStackTrace();
                             }
@@ -850,6 +862,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                     showToast("Saved: " + mFile);
                     Log.d(TAG, mFile.toString());
                     unlockFocus();
+                    mSucceed.onSucceed(mFile);
                 }
             };
 
@@ -1054,5 +1067,27 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
 
     public void setOnClickListener(OnBtnClickListener onClickListener){
         this.btnListener = onClickListener;
+    }
+
+    public interface onCaptureSucceed{
+        public void onSucceed(File file);
+    }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof onCaptureSucceed) {
+            mSucceed = (onCaptureSucceed) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement onCaptureSucceed");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mSucceed = null;
     }
 }
