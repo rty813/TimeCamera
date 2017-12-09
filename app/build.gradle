@@ -37,4 +37,6 @@ dependencies {
     compile 'com.github.luoshihai:XXPictureCompress:V1.0.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     implementation project(':NumberPickView')
+    compile 'com.rengwuxian.materialedittext:library:2.1.4'
+
 }

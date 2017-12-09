@@ -227,6 +227,8 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                     newAlbumFragment.iv_preview.setImageBitmap(bitmap);
                 }
             });
+            newAlbumFragment.isTookPic = true;
+            newAlbumFragment.checkCommit();
         }
         else{
             getSupportFragmentManager().popBackStack();

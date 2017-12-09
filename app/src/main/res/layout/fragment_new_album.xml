@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/test"
     tools:context="pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment">
 
     <android.support.design.widget.AppBarLayout
@@ -17,7 +18,16 @@
             app:titleTextColor="@android:color/white">
         </android.support.v7.widget.Toolbar>
     </android.support.design.widget.AppBarLayout>
-
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_commit"
+        android:src="@drawable/btn_commit"
+        android:layout_gravity="center_horizontal|bottom"
+        android:visibility="gone"
+        app:rippleColor="#ff0a5d"
+        app:elevation="5dp"
+        android:layout_marginBottom="20dp"/>
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -27,30 +37,43 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
+            android:background="#c1ffffff"
             android:layout_marginTop="20dp"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp">
-            <EditText
+            <!--<EditText-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:hint="@string/insert_name"-->
+                <!--android:layout_margin="10dp"-->
+                <!--android:id="@+id/et_albumname"-->
+                <!--/>-->
+            <com.rengwuxian.materialedittext.MaterialEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/insert_name"
+                app:met_floatingLabel="normal"
+                android:hint="相册名称"
+                app:met_floatingLabelText="相册名称"
+                app:met_maxCharacters="10"
                 android:id="@+id/et_albumname"
-                />
+                android:layout_margin="10dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="20dp">
+                android:layout_margin="10dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:text="@string/insert_cyc"/>
                 <Spinner
                     android:id="@+id/spinner_cyc"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
                     android:entries="@array/cyc"
                     />
             </LinearLayout>
@@ -59,24 +82,33 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:id="@+id/ll_choosetime"
-                android:layout_marginTop="20dp">
+                android:layout_margin="10dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="选择提醒时间"/>
                 <ImageButton
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/picktime"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@android:color/transparent"
+                    android:id="@+id/btn_picktime"
+                    android:scaleType="centerInside"/>
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/insert"
-                    android:id="@+id/btn_picktime"
-                    android:scaleType="fitXY"/>
+                    android:id="@+id/tv_picktime"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center_vertical"/>
             </LinearLayout>
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:id="@+id/insert_container"
-                android:layout_marginTop="20dp"
+                android:layout_margin="10dp"
                 android:background="#76000000">
                 <ImageView
                     android:layout_width="wrap_content"
@@ -92,13 +124,9 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="20dp"
-                android:background="#454545"/>
+                android:background="@android:color/transparent"/>
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 
-    <android.support.design.widget.FloatingActionButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="20dp"/>
+
 </android.support.design.widget.CoordinatorLayout>

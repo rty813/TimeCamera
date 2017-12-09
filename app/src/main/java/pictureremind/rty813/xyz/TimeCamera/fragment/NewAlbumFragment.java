@@ -3,33 +3,33 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.NestedScrollView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.format.Time;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
+import com.rengwuxian.materialedittext.MaterialEditText;
 
-import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
@@ -55,12 +55,15 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     private String str_cyc = "每周";
 
     private onBtnClickListener mListener;
-    private EditText et_albumname;
+    private MaterialEditText et_albumname;
     private NestedScrollView nsv_root;
     public ImageView iv_preview;
     private String filepath;
     public FrameLayout insert_container;
     private String albumname;
+    private FloatingActionButton btn_commit;
+    private TextView tv_picktime;
+    public boolean isTookPic = false;
 
     public NewAlbumFragment() {
         // Required empty public constructor
@@ -108,7 +111,44 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         iv_preview = view.findViewById(R.id.iv_preview);
         et_albumname = view.findViewById(R.id.et_albumname);
         nsv_root = view.findViewById(R.id.nsv_root);
+        btn_commit = view.findViewById(R.id.btn_commit);
+        tv_picktime = view.findViewById(R.id.tv_picktime);
         final LinearLayout ll_choosetime = view.findViewById(R.id.ll_choosetime);
+
+        et_albumname.validate("\\d+", "Only Integer Valid!");
+        et_albumname.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                checkCommit();
+            }
+        });
+        tv_picktime.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                System.out.println("afterTextChanged");
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                checkCommit();
+                System.out.println("afterTextChanged");
+            }
+        });
         insert_container.setOnClickListener(this);
         view.findViewById(R.id.btn_picktime).setOnClickListener(this);
         ((Spinner)view.findViewById(R.id.spinner_cyc)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -157,7 +197,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 mListener.onClick(view);
                 break;
             case R.id.btn_picktime:
-                iv_preview.setImageResource(R.drawable.insert);
                 Toast.makeText(getActivity(), str_cyc, Toast.LENGTH_SHORT).show();
                 View numberpicker = null;
                 Time t=new Time();
@@ -174,6 +213,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
+                                tv_picktime.setText("hh");
                             }
                         });
                         break;
@@ -184,6 +224,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
+                                tv_picktime.setText("hh");
                             }
                         });
                         break;
@@ -212,6 +253,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
+                                tv_picktime.setText("hh");
                             }
                         });
                         break;
@@ -222,6 +264,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getActivity(), "每天！", Toast.LENGTH_SHORT).show();
+                                tv_picktime.setText("hh");
                             }
                         });
                         break;
@@ -237,7 +280,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 if (numberpicker.findViewById(R.id.np_week) != null){
                     ((NumberPickerView)numberpicker.findViewById(R.id.np_week)).setDisplayedValues(new String[]{"星期一",
                             "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"});
-                    ((NumberPickerView)numberpicker.findViewById(R.id.np_week)).setValue(t.weekDay);
+                    ((NumberPickerView)numberpicker.findViewById(R.id.np_week)).setValue(t.weekDay==0? 7: t.weekDay);
                 }
                 if (numberpicker.findViewById(R.id.np_day) != null && !str_cyc.equals("每年")){
                     ((NumberPickerView)numberpicker.findViewById(R.id.np_day)).setMaxValue(31, true);
@@ -263,6 +306,41 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
     public interface onBtnClickListener{
         public void onClick(View v);
+    }
+
+    public void checkCommit(){
+        if (et_albumname.getText().toString().equals("") || !isTookPic
+                || tv_picktime.getText().toString().equals("")){
+            System.out.println("dismiss");
+            if (btn_commit.getVisibility() == View.VISIBLE){
+                Animation animation = AnimationUtils.loadAnimation(getActivity(),R.anim.fm_pop_exit);
+                animation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        btn_commit.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                btn_commit.startAnimation(animation);
+            }
+        }
+        else {
+            System.out.println("show");
+            if (btn_commit.getVisibility() == View.GONE){
+                btn_commit.setVisibility(View.VISIBLE);
+                btn_commit.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fm_camera_enter));
+            }
+        }
+
     }
 
 }
