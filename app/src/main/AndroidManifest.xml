@@ -15,7 +15,9 @@
         <activity android:name="pictureremind.rty813.xyz.TimeCamera.activity.TestActivity">
 
         </activity>
-        <activity android:name="pictureremind.rty813.xyz.TimeCamera.activity.MainActivity">
+        <activity
+            android:name="pictureremind.rty813.xyz.TimeCamera.activity.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

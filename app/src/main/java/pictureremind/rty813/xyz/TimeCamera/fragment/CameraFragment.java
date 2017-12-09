@@ -9,6 +9,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -63,6 +64,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 
 /**
  * Created by zhang on 2017/12/5.
@@ -461,7 +463,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
+        mFile = new File(getActivity().getExternalFilesDir(null), "pic" + System.currentTimeMillis() + ".jpg");
     }
 
     @Override
@@ -729,6 +731,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                                 // Flash is automatically enabled when necessary.
+//                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+//                                        CaptureRequest.CONTROL_AE_MODE_OFF);
                                 setAutoFlash(mPreviewRequestBuilder);
 
                                 // Finally, we start displaying the camera preview.
@@ -851,12 +855,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-//            setAutoFlash(captureBuilder);
+            setAutoFlash(captureBuilder);
 
             // Orientation
-            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-            System.out.println("rotation" + rotation);
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation());
 
             CameraCaptureSession.CaptureCallback CaptureCallback
                     = new CameraCaptureSession.CaptureCallback() {
@@ -868,8 +870,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                     showToast("Saved: " + mFile);
                     Log.d(TAG, mFile.toString());
                     unlockFocus();
-                    System.out.println(mFile.hashCode());
-                    mSucceed.onSucceed(mFile);
+                    mSucceed.onSucceed(mFile.getAbsolutePath());
                 }
             };
 
@@ -884,15 +885,15 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     /**
      * Retrieves the JPEG orientation from the specified screen rotation.
      *
-     * @param rotation The screen rotation.
      * @return The JPEG orientation (one of 0, 90, 270, and 360)
      */
-    private int getOrientation(int rotation) {
+    private int getOrientation() {
         // Sensor orientation is 90 for most devices, or 270 for some devices (eg. Nexus 5X)
         // We have to take that into account and rotate JPEG properly.
         // For devices with orientation of 90, we simply return our mapping from ORIENTATIONS.
         // For devices with orientation of 270, we need to rotate the JPEG 180 degrees.
-        return (ORIENTATIONS.get(rotation) + mSensorOrientation + 270) % 360;
+//        return (ORIENTATIONS.get(rotation) + mSensorOrientation + 270) % 360;
+        return ((MainActivity)getActivity()).getRotate() + 90 == 360 ? 0 : ((MainActivity)getActivity()).getRotate() + 90;
     }
 
     /**
@@ -942,7 +943,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
         if (mFlashSupported) {
             requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                    CaptureRequest.CONTROL_AE_MODE_ON);
         }
     }
 
@@ -1077,7 +1078,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     }
 
     public interface onCaptureSucceed{
-        public void onSucceed(File file);
+        public void onSucceed(String filepath);
     }
 
 

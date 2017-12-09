@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -27,6 +29,7 @@ import android.widget.Toast;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
@@ -54,8 +57,10 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     private onBtnClickListener mListener;
     private EditText et_albumname;
     private NestedScrollView nsv_root;
-    private ImageView iv_preview;
-    private FrameLayout insert_container;
+    public ImageView iv_preview;
+    private String filepath;
+    public FrameLayout insert_container;
+    private String albumname;
 
     public NewAlbumFragment() {
         // Required empty public constructor
@@ -98,6 +103,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+//        myHandler = new MyHandler();
         insert_container = view.findViewById(R.id.insert_container);
         iv_preview = view.findViewById(R.id.iv_preview);
         et_albumname = view.findViewById(R.id.et_albumname);
@@ -123,16 +129,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
             }
         });
-//        NumberPickerView numberPickerView = view.findViewById(R.id.numberpickerview);
-//        numberPickerView.setOnValueChangedListener(new NumberPickerView.OnValueChangeListener() {
-//            @Override
-//            public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
-//                System.out.println("value changed");
-//            }
-//        });
-//        numberPickerView.setMaxValue(8);
-//        numberPickerView.setMinValue(5);
-//        numberPickerView.setValue(6);
+
     }
 
 
@@ -262,28 +259,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
                 break;
         }
-    }
-
-    public void setAlbumPic(final File file){
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-//                System.out.println(filepath);
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-                int width = insert_container.getWidth();
-                int height = insert_container.getHeight();
-                float prop = (float)options.outHeight / options.outWidth;
-                height = (int)(width * prop) > height ? (int)(width * prop) : height;
-                width  = (int)(height / prop) > width ? (int)(height / prop) : width;
-                int rotate = width > height? 90 : 0;
-                System.out.println(height + " " + width + " " + rotate);
-                Picasso.with(getActivity()).load(new File(file.getAbsolutePath())).resize(width, height)
-                        .centerInside().rotate(rotate).placeholder(R.drawable.add).into(iv_preview);
-            }
-        });
-
     }
 
     public interface onBtnClickListener{
