@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.rengwuxian.materialedittext.MaterialEditText;
+import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
 import java.util.ArrayList;
 
@@ -365,6 +366,18 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 toolbar.setSubtitleTextColor(toolbarTextColor);
             }
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        MiStatInterface.recordPageEnd();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        MiStatInterface.recordPageStart(getActivity(), "NewAlbumFragment");
     }
 
 }

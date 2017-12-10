@@ -50,6 +50,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.android.camera2basic.AutoFitTextureView;
+import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -470,6 +471,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     public void onResume() {
         super.onResume();
         System.out.println("onResume");
+        MiStatInterface.recordPageStart(getActivity(), "CameraFragment");
         startBackgroundThread();
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
@@ -481,6 +483,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     @Override
     public void onPause() {
         closeCamera();
+        MiStatInterface.recordPageEnd();
         stopBackgroundThread();
         super.onPause();
     }

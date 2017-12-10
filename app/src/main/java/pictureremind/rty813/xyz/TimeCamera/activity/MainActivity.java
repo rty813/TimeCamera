@@ -21,6 +21,9 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.xiaomi.mistatistic.sdk.MiStatInterface;
+import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,11 +58,19 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     public int tb_color = -1;
     public int tb_title = -1;
     public int tb_sub = -1;
+    private static final String MY_APPID = "2882303761517679467";
+    private static final String MY_APP_KEY = "5611767931467";
+    private static final String CHANNEL = "SELF";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        MiStatInterface.initialize(this, MY_APPID, MY_APP_KEY, CHANNEL);
+        MiStatInterface.setUploadPolicy(MiStatInterface.UPLOAD_POLICY_REALTIME, 0);
+        MiStatInterface.enableExceptionCatcher(true);
+        URLStatsRecorder.enableAutoRecord();
+
         WindowManager windowManager = getWindowManager();
         DisplayMetrics metrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getMetrics(metrics);
@@ -137,14 +148,10 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                     br.close();
 
                     if (url_local == null || (url_remote != null && !url_local.equals(url_remote))) {
-                        URL url = new URL(url_remote);
-                        conn = (HttpURLConnection) url.openConnection();
+                        conn = (HttpURLConnection) new URL(url_remote).openConnection();
                         conn.setConnectTimeout(5000);
-                        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
-                        if (conn.getResponseCode() == 200) {
-                            InputStream inputStream = conn.getInputStream();
-                            bitmap = BitmapFactory.decodeStream(inputStream);
-                        }
+                        InputStream inputStream = conn.getInputStream();
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                         File file = new File(getExternalFilesDir(null), "background.jpg");
                         BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
@@ -236,61 +243,6 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         orientationEventListener.disable();
         super.onDestroy();
     }
-
-//    private static class MyHandler extends Handler{
-//        private final WeakReference<NewAlbumFragment> newAlbumFragment;
-//        private final WeakReference<MainFragment> mainFragment;
-//        private final WeakReference<MainActivity> mActivity;
-//
-//        public MyHandler(MainActivity activity, MainFragment mainFragment, NewAlbumFragment newAlbumFragment){
-//            this.mainFragment = new WeakReference<>(mainFragment);
-//            this.newAlbumFragment = new WeakReference<>(newAlbumFragment);
-//            mActivity = new WeakReference<>(activity);
-//        }
-//
-//        @Override
-//        public void handleMessage(Message msg) {
-//            final MainActivity activity = mActivity.get();
-//            final NewAlbumFragment albumFragment = newAlbumFragment.get();
-//            final MainFragment mFragment = mainFragment.get();
-//            Bitmap bitmap = null;
-//            switch (msg.what){
-//                case 1:
-//                    bitmap = BitmapFactory.decodeFile(activity.getExternalFilesDir(null) + "/background.jpg");
-//                    activity.getWindow().setBackgroundDrawable(new BitmapDrawable(bitmap));
-//                    Palette.from(bitmap)
-//                            .generate(new Palette.PaletteAsyncListener() {
-//                                @Override
-//                                public void onGenerated(@NonNull Palette palette) {
-//                                    if (palette.getVibrantSwatch() != null && palette.getLightVibrantSwatch() != null){
-//                                        activity.getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
-//                                        Palette.Swatch swatch = palette.getLightVibrantSwatch();
-//                                        activity.tb_color = swatch.getRgb();
-//                                        activity.tb_sub = swatch.getBodyTextColor();
-//                                        activity.tb_title = swatch.getTitleTextColor();
-//                                        if (mFragment != null){
-//                                            mFragment.setToolbarColor();
-//                                        }
-//                                    }
-//                                }
-//                            });
-//                    break;
-//                case 2:
-//                    bitmap = (Bitmap) msg.obj;
-//                    SharedPreferences sharedPreferences = activity.getSharedPreferences("background", Context.MODE_PRIVATE);
-//                    SharedPreferences.Editor editor = sharedPreferences.edit();
-//                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-//                    String date = format.format(new Date(System.currentTimeMillis()));
-//                    editor.putString("date",date);
-//                    editor.apply();
-//                    break;
-//                default:
-//                    super.handleMessage(msg);
-//                    break;
-//            }
-//
-//        }
-//    }
 
     @Override
     public void onSucceed(String filepath) {
