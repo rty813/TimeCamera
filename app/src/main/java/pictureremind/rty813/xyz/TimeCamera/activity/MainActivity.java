@@ -101,9 +101,15 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                 .generate(new Palette.PaletteAsyncListener() {
                     @Override
                     public void onGenerated(@NonNull Palette palette) {
-                        if (palette.getVibrantSwatch() != null && palette.getLightVibrantSwatch() != null) {
+                        if (palette.getVibrantSwatch() != null) {
+                            Palette.Swatch swatch;
+                            if (palette.getLightVibrantSwatch() != null) {
+                                swatch = palette.getLightVibrantSwatch();
+                            }
+                            else {
+                                swatch = palette.getVibrantSwatch();
+                            }
                             getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
-                            Palette.Swatch swatch = palette.getLightVibrantSwatch();
                             tb_color = swatch.getRgb();
                             tb_sub = swatch.getBodyTextColor();
                             tb_title = swatch.getTitleTextColor();
