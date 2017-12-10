@@ -24,6 +24,7 @@ import android.widget.LinearLayout;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     public static int height;
     private OrientationEventListener orientationEventListener;
     private int rotate;
-    private MyHandler mHandler = null;
+    //    private MyHandler mHandler = null;
     public int tb_color = -1;
     public int tb_title = -1;
     public int tb_sub = -1;
@@ -66,52 +67,75 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         height = metrics.heightPixels;
 
         System.out.println(width + " " + height);
-        if (null == savedInstanceState){
-            if (null == mainFragment){
-                Log.e("Err","Null == mainFragment");
+        if (null == savedInstanceState) {
+            if (null == mainFragment) {
+                Log.e("Err", "Null == mainFragment");
                 mainFragment = new MainFragment();
                 mainFragment.setSwipeItemClickListener(this);
             }
             getSupportFragmentManager().beginTransaction().setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE).
                     replace(R.id.container, mainFragment, "mainFragment").commit();
-        }
-        else{
+        } else {
             mainFragment = (MainFragment) getSupportFragmentManager().findFragmentByTag("mainFragment");
         }
         orientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
             @Override
             public void onOrientationChanged(int i) {
-                rotate = ((i+45) / 90 * 90) % 360;
+                rotate = ((i + 45) / 90 * 90) % 360;
             }
         };
-        if (orientationEventListener.canDetectOrientation()){
+        if (orientationEventListener.canDetectOrientation()) {
             orientationEventListener.enable();
         }
 
-//        获取背景图片
-        mHandler = new MyHandler(this, mainFragment, newAlbumFragment);
-        SharedPreferences sharedPreferences = getSharedPreferences("background", Context.MODE_PRIVATE);
-        String date = sharedPreferences.getString("date", null);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        String now = format.format(new Date(System.currentTimeMillis()));
-        System.out.println(now + "//////////////" + date);
-        if (true || date == null || !date.equals(now)){
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try{
-                        HttpURLConnection conn = (HttpURLConnection) new URL("http://139.199.37.92:9999").openConnection();
-                        conn.setConnectTimeout(5000);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        String str_url = br.readLine();
-                        conn.disconnect();
-                        br.close();
+//        设置背景图片
+        Bitmap bitmap = null;
+        File file = new File(getExternalFilesDir(null), "background.jpg");
+        if (file.exists()) {
+            bitmap = BitmapFactory.decodeFile(getExternalFilesDir(null) + "/background.jpg");
+        } else {
+            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+        }
+        getWindow().setBackgroundDrawable(new BitmapDrawable(bitmap));
+        Palette.from(bitmap)
+                .generate(new Palette.PaletteAsyncListener() {
+                    @Override
+                    public void onGenerated(@NonNull Palette palette) {
+                        if (palette.getVibrantSwatch() != null && palette.getLightVibrantSwatch() != null) {
+                            getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
+                            Palette.Swatch swatch = palette.getLightVibrantSwatch();
+                            tb_color = swatch.getRgb();
+                            tb_sub = swatch.getBodyTextColor();
+                            tb_title = swatch.getTitleTextColor();
+                            if (mainFragment != null) {
+                                mainFragment.setToolbarColor();
+                            }
+                        }
+                    }
+                });
 
-                        URL url = new URL(str_url);
-                        conn = (HttpURLConnection)url.openConnection();
+//        更新本地背景图片
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final SharedPreferences sharedPreferences = getSharedPreferences("background", Context.MODE_PRIVATE);
+                    String url_local = sharedPreferences.getString("url", null);
+                    String url_remote;
+
+                    HttpURLConnection conn = (HttpURLConnection) new URL("http://139.199.37.92:9999").openConnection();
+                    conn.setConnectTimeout(5000);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    url_remote = br.readLine();
+                    conn.disconnect();
+                    br.close();
+
+                    if (url_local == null || (url_remote != null && !url_local.equals(url_remote))) {
+                        URL url = new URL(url_remote);
+                        conn = (HttpURLConnection) url.openConnection();
                         conn.setConnectTimeout(5000);
                         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
-                        if(conn.getResponseCode() == 200) {
+                        if (conn.getResponseCode() == 200) {
                             InputStream inputStream = conn.getInputStream();
                             bitmap = BitmapFactory.decodeStream(inputStream);
                         }
@@ -120,20 +144,16 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
                         outputStream.flush();
                         outputStream.close();
-                        Message msg = mHandler.obtainMessage();
-                        msg.what = 2;
-                        msg.obj = bitmap;
-                        mHandler.sendMessage(msg);
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("url", url_remote);
+                        editor.apply();
+                        Log.d("update background", "end");
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            }).start();
-        }
-        else {
-            mHandler.sendEmptyMessage(1);
-        }
+            }
+        }).start();
     }
 
     public int getRotate() {
@@ -211,59 +231,60 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         super.onDestroy();
     }
 
-    private static class MyHandler extends Handler{
-        private final WeakReference<NewAlbumFragment> newAlbumFragment;
-        private final WeakReference<MainFragment> mainFragment;
-        private final WeakReference<MainActivity> mActivity;
-
-        public MyHandler(MainActivity activity, MainFragment mainFragment, NewAlbumFragment newAlbumFragment){
-            this.mainFragment = new WeakReference<>(mainFragment);
-            this.newAlbumFragment = new WeakReference<>(newAlbumFragment);
-            mActivity = new WeakReference<>(activity);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            final MainActivity activity = mActivity.get();
-            final NewAlbumFragment albumFragment = newAlbumFragment.get();
-            final MainFragment mFragment = mainFragment.get();
-            Bitmap bitmap = null;
-            switch (msg.what){
-                case 1:
-                    bitmap = BitmapFactory.decodeFile(activity.getExternalFilesDir(null) + "/background.jpg");
-                    break;
-                case 2:
-                    bitmap = (Bitmap) msg.obj;
-                    SharedPreferences sharedPreferences = activity.getSharedPreferences("background", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    String date = format.format(new Date(System.currentTimeMillis()));
-                    editor.putString("date",date);
-                    editor.apply();
-                    break;
-                default:
-                    super.handleMessage(msg);
-                    break;
-            }
-            activity.getWindow().setBackgroundDrawable(new BitmapDrawable(bitmap));
-            Palette.from(bitmap)
-                    .generate(new Palette.PaletteAsyncListener() {
-                        @Override
-                        public void onGenerated(@NonNull Palette palette) {
-                            if (palette.getVibrantSwatch() != null && palette.getLightVibrantSwatch() != null){
-                                activity.getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
-                                Palette.Swatch swatch = palette.getLightVibrantSwatch();
-                                activity.tb_color = swatch.getRgb();
-                                activity.tb_sub = swatch.getBodyTextColor();
-                                activity.tb_title = swatch.getTitleTextColor();
-                                if (mFragment != null){
-                                    mFragment.setToolbarColor();
-                                }
-                            }
-                        }
-                    });
-        }
-    }
+//    private static class MyHandler extends Handler{
+//        private final WeakReference<NewAlbumFragment> newAlbumFragment;
+//        private final WeakReference<MainFragment> mainFragment;
+//        private final WeakReference<MainActivity> mActivity;
+//
+//        public MyHandler(MainActivity activity, MainFragment mainFragment, NewAlbumFragment newAlbumFragment){
+//            this.mainFragment = new WeakReference<>(mainFragment);
+//            this.newAlbumFragment = new WeakReference<>(newAlbumFragment);
+//            mActivity = new WeakReference<>(activity);
+//        }
+//
+//        @Override
+//        public void handleMessage(Message msg) {
+//            final MainActivity activity = mActivity.get();
+//            final NewAlbumFragment albumFragment = newAlbumFragment.get();
+//            final MainFragment mFragment = mainFragment.get();
+//            Bitmap bitmap = null;
+//            switch (msg.what){
+//                case 1:
+//                    bitmap = BitmapFactory.decodeFile(activity.getExternalFilesDir(null) + "/background.jpg");
+//                    activity.getWindow().setBackgroundDrawable(new BitmapDrawable(bitmap));
+//                    Palette.from(bitmap)
+//                            .generate(new Palette.PaletteAsyncListener() {
+//                                @Override
+//                                public void onGenerated(@NonNull Palette palette) {
+//                                    if (palette.getVibrantSwatch() != null && palette.getLightVibrantSwatch() != null){
+//                                        activity.getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
+//                                        Palette.Swatch swatch = palette.getLightVibrantSwatch();
+//                                        activity.tb_color = swatch.getRgb();
+//                                        activity.tb_sub = swatch.getBodyTextColor();
+//                                        activity.tb_title = swatch.getTitleTextColor();
+//                                        if (mFragment != null){
+//                                            mFragment.setToolbarColor();
+//                                        }
+//                                    }
+//                                }
+//                            });
+//                    break;
+//                case 2:
+//                    bitmap = (Bitmap) msg.obj;
+//                    SharedPreferences sharedPreferences = activity.getSharedPreferences("background", Context.MODE_PRIVATE);
+//                    SharedPreferences.Editor editor = sharedPreferences.edit();
+//                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+//                    String date = format.format(new Date(System.currentTimeMillis()));
+//                    editor.putString("date",date);
+//                    editor.apply();
+//                    break;
+//                default:
+//                    super.handleMessage(msg);
+//                    break;
+//            }
+//
+//        }
+//    }
 
     @Override
     public void onSucceed(String filepath) {

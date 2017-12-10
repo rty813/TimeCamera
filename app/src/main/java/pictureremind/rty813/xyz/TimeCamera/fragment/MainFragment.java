@@ -97,10 +97,17 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
         int toolbarColor = ((MainActivity)getActivity()).tb_color;
         int toolbarTextColor = ((MainActivity)getActivity()).tb_title;
         int subTextColor = ((MainActivity)getActivity()).tb_sub;
-        if (toolbarColor != -1 && toolbarTextColor != -1 && subTextColor != -1){
+        if (toolbarColor != -1) {
             toolbar.setBackgroundColor(toolbarColor);
+        }
+        if (toolbarTextColor != -1){
             toolbar.setTitleTextColor(toolbarTextColor);
-            toolbar.setSubtitleTextColor(subTextColor);
+            if (subTextColor != -1){
+                toolbar.setSubtitleTextColor(subTextColor);
+            }
+            else {
+                toolbar.setSubtitleTextColor(toolbarTextColor);
+            }
         }
     }
 
