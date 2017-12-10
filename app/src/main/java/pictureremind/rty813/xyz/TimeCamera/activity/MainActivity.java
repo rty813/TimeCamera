@@ -22,10 +22,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -93,15 +95,21 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String now = format.format(new Date(System.currentTimeMillis()));
         System.out.println(now + "//////////////" + date);
-        if (date == null || !date.equals(now)){
+        if (true || date == null || !date.equals(now)){
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try{
-                        URL url = new URL("http://imgapi.wallpaperscraft.com/preview/118/118548/118548_360x640.jpg");
-                        HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                        HttpURLConnection conn = (HttpURLConnection) new URL("http://139.199.37.92:9999").openConnection();
                         conn.setConnectTimeout(5000);
-                        conn.setRequestMethod("GET");
+                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String str_url = br.readLine();
+                        conn.disconnect();
+                        br.close();
+
+                        URL url = new URL(str_url);
+                        conn = (HttpURLConnection)url.openConnection();
+                        conn.setConnectTimeout(5000);
                         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
                         if(conn.getResponseCode() == 200) {
                             InputStream inputStream = conn.getInputStream();
