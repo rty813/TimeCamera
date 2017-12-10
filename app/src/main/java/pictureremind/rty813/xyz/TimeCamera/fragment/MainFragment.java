@@ -1,12 +1,16 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
+import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 import pictureremind.rty813.xyz.TimeCamera.util.RecyclerviewAdapter;
 import pictureremind.rty813.xyz.TimeCamera.R;
 
@@ -32,6 +37,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
     private RecyclerviewAdapter adapter;
     private ArrayList<Map<String, String>> list;
     private onSwipeItemClickListener swipeItemClickListener;
+    private Toolbar toolbar;
 
     @Nullable
     @Override
@@ -44,6 +50,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
         super.onViewCreated(view, savedInstanceState);
         view.findViewById(R.id.button).setOnClickListener(this);
         view.findViewById(R.id.btn_insert).setOnClickListener(this);
+        toolbar = view.findViewById(R.id.toolbar);
         list = new ArrayList<>();
         for (int i = 0; i < 100; i++){
             list.add(null);
@@ -84,6 +91,17 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
         adapter = new RecyclerviewAdapter(getActivity(), list);
         recyclerView.setAdapter(adapter);
 
+    }
+
+    public void setToolbarColor(){
+        int toolbarColor = ((MainActivity)getActivity()).tb_color;
+        int toolbarTextColor = ((MainActivity)getActivity()).tb_title;
+        int subTextColor = ((MainActivity)getActivity()).tb_sub;
+        if (toolbarColor != -1 && toolbarTextColor != -1 && subTextColor != -1){
+            toolbar.setBackgroundColor(toolbarColor);
+            toolbar.setTitleTextColor(toolbarTextColor);
+            toolbar.setSubtitleTextColor(subTextColor);
+        }
     }
 
     @Override

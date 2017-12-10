@@ -13,6 +13,7 @@
             android:layout_height="?attr/actionBarSize"
             app:layout_scrollFlags="enterAlways|scroll"
             app:title="@string/app_name"
+            android:id="@+id/toolbar"
             app:subtitle="拍照神器"
             app:subtitleTextColor="@android:color/white"
             app:titleTextColor="@android:color/white">

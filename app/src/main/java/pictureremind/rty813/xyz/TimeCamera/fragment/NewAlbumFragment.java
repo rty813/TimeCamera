@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.Time;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -64,6 +66,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     private FloatingActionButton btn_commit;
     private TextView tv_picktime;
     public boolean isTookPic = false;
+    private Toolbar toolbar;
 
     public NewAlbumFragment() {
         // Required empty public constructor
@@ -113,6 +116,8 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         nsv_root = view.findViewById(R.id.nsv_root);
         btn_commit = view.findViewById(R.id.btn_commit);
         tv_picktime = view.findViewById(R.id.tv_picktime);
+        toolbar = view.findViewById(R.id.toolbar);
+        setToolbarColor();
         final LinearLayout ll_choosetime = view.findViewById(R.id.ll_choosetime);
 
         et_albumname.validate("\\d+", "Only Integer Valid!");
@@ -341,6 +346,18 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
             }
         }
 
+    }
+
+
+    public void setToolbarColor(){
+        int toolbarColor = ((MainActivity)getActivity()).tb_color;
+        int toolbarTextColor = ((MainActivity)getActivity()).tb_title;
+        int subTextColor = ((MainActivity)getActivity()).tb_sub;
+        if (toolbarColor != -1 && toolbarTextColor != -1 && subTextColor != -1){
+            toolbar.setBackgroundColor(toolbarColor);
+            toolbar.setTitleTextColor(toolbarTextColor);
+            toolbar.setSubtitleTextColor(subTextColor);
+        }
     }
 
 }

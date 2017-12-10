@@ -1,18 +1,18 @@
 package pictureremind.rty813.xyz.TimeCamera.activity;
 
-import android.content.pm.ActivityInfo;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PersistableBundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.OrientationEventListener;
@@ -20,13 +20,17 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
-
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
@@ -42,9 +46,12 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     NewAlbumFragment newAlbumFragment;
     public static int width;
     public static int height;
-    private MyHandler mHandler = null;
     private OrientationEventListener orientationEventListener;
     private int rotate;
+    private MyHandler mHandler = null;
+    public int tb_color = -1;
+    public int tb_title = -1;
+    public int tb_sub = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         windowManager.getDefaultDisplay().getMetrics(metrics);
         width = metrics.widthPixels;
         height = metrics.heightPixels;
+
         System.out.println(width + " " + height);
         if (null == savedInstanceState){
             if (null == mainFragment){
@@ -76,6 +84,47 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         };
         if (orientationEventListener.canDetectOrientation()){
             orientationEventListener.enable();
+        }
+
+//        获取背景图片
+        mHandler = new MyHandler(this, mainFragment, newAlbumFragment);
+        SharedPreferences sharedPreferences = getSharedPreferences("background", Context.MODE_PRIVATE);
+        String date = sharedPreferences.getString("date", null);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String now = format.format(new Date(System.currentTimeMillis()));
+        System.out.println(now + "//////////////" + date);
+        if (date == null || !date.equals(now)){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try{
+                        URL url = new URL("http://imgapi.wallpaperscraft.com/preview/118/118548/118548_360x640.jpg");
+                        HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                        conn.setConnectTimeout(5000);
+                        conn.setRequestMethod("GET");
+                        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+                        if(conn.getResponseCode() == 200) {
+                            InputStream inputStream = conn.getInputStream();
+                            bitmap = BitmapFactory.decodeStream(inputStream);
+                        }
+                        File file = new File(getExternalFilesDir(null), "background.jpg");
+                        BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+                        outputStream.flush();
+                        outputStream.close();
+                        Message msg = mHandler.obtainMessage();
+                        msg.what = 2;
+                        msg.obj = bitmap;
+                        mHandler.sendMessage(msg);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+        else {
+            mHandler.sendEmptyMessage(1);
         }
     }
 
@@ -103,7 +152,6 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                 break;
             case R.id.btn_insert:
                 newAlbumFragment = NewAlbumFragment.newInstance(null, null);
-                mHandler = new MyHandler(this, newAlbumFragment);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                         .hide(mainFragment)
@@ -156,47 +204,58 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     }
 
     private static class MyHandler extends Handler{
-        private final WeakReference<NewAlbumFragment> mFragment;
+        private final WeakReference<NewAlbumFragment> newAlbumFragment;
+        private final WeakReference<MainFragment> mainFragment;
         private final WeakReference<MainActivity> mActivity;
 
-        public MyHandler(MainActivity activity, NewAlbumFragment fragment){
-            mFragment = new WeakReference<>(fragment);
+        public MyHandler(MainActivity activity, MainFragment mainFragment, NewAlbumFragment newAlbumFragment){
+            this.mainFragment = new WeakReference<>(mainFragment);
+            this.newAlbumFragment = new WeakReference<>(newAlbumFragment);
             mActivity = new WeakReference<>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
+            final MainActivity activity = mActivity.get();
+            final NewAlbumFragment albumFragment = newAlbumFragment.get();
+            final MainFragment mFragment = mainFragment.get();
+            Bitmap bitmap = null;
             switch (msg.what){
                 case 1:
-                    String filepath = (String) msg.obj;
-                    NewAlbumFragment fragment = mFragment.get();
-                    MainActivity activity = mActivity.get();
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inJustDecodeBounds = true;
-                    BitmapFactory.decodeFile(filepath, options);
-                    int width = fragment.insert_container.getWidth();
-                    int height = fragment.insert_container.getHeight();
-                    float prop = (float)options.outHeight / options.outWidth;
-                    height = (int)(width * prop) > height ? (int)(width * prop) : height;
-                    width  = (int)(height / prop) > width ? (int)(height / prop) : width;
-                    int outWidth = options.outWidth;
-                    options.inJustDecodeBounds = false;
-                    options.inSampleSize = (int)((float)outWidth / width);
-                    Log.e("inSampleSize", String.valueOf(options.inSampleSize));
-                    Bitmap bitmap = BitmapFactory.decodeFile(filepath, options);
-                    fragment.iv_preview.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-                    fragment.iv_preview.setImageBitmap(bitmap);
-
-//                    Picasso.with(activity).load(new File(filepath)).resize(width, height)
-//                            .centerInside().placeholder(R.drawable.add).into(fragment.iv_preview);
+                    bitmap = BitmapFactory.decodeFile(activity.getExternalFilesDir(null) + "/background.jpg");
+                    break;
+                case 2:
+                    bitmap = (Bitmap) msg.obj;
+                    SharedPreferences sharedPreferences = activity.getSharedPreferences("background", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                    String date = format.format(new Date(System.currentTimeMillis()));
+                    editor.putString("date",date);
+                    editor.apply();
                     break;
                 default:
                     super.handleMessage(msg);
                     break;
             }
+            activity.getWindow().setBackgroundDrawable(new BitmapDrawable(bitmap));
+            Palette.from(bitmap)
+                    .generate(new Palette.PaletteAsyncListener() {
+                        @Override
+                        public void onGenerated(@NonNull Palette palette) {
+                            if (palette.getVibrantSwatch() != null && palette.getLightVibrantSwatch() != null){
+                                activity.getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
+                                Palette.Swatch swatch = palette.getLightVibrantSwatch();
+                                activity.tb_color = swatch.getRgb();
+                                activity.tb_sub = swatch.getBodyTextColor();
+                                activity.tb_title = swatch.getTitleTextColor();
+                                if (mFragment != null){
+                                    mFragment.setToolbarColor();
+                                }
+                            }
+                        }
+                    });
         }
     }
-
 
     @Override
     public void onSucceed(String filepath) {
@@ -233,28 +292,6 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         else{
             getSupportFragmentManager().popBackStack();
         }
-//        if (mHandler == null){
-//            return;
-//        }
-//        final Message msg = mHandler.obtainMessage();
-//        msg.what = 1;
-//        msg.obj = filepath;
-////        System.out.println(file.hashCode());
-//
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    Thread.sleep(100);
-//                    if (!(getSupportFragmentManager().getBackStackEntryCount() == 0)
-//                            && getSupportFragmentManager().getBackStackEntryAt(getSupportFragmentManager().getBackStackEntryCount() - 1).getName().equals("newAlbumFragment")) {
-////                        newAlbumFragment.setAlbumPic(file);
-//                        mHandler.sendMessage(msg);
-//                    }
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }).start();
+
     }
 }

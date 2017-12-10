@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@drawable/test"
     tools:context="pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment">
 
     <android.support.design.widget.AppBarLayout
@@ -12,6 +11,7 @@
         <android.support.v7.widget.Toolbar
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:id="@+id/toolbar"
             app:title="@string/app_name"
             app:subtitle="新建相册"
             app:subtitleTextColor="@android:color/white"
@@ -37,17 +37,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:background="#c1ffffff"
+            android:background="#e0ffffff"
             android:layout_marginTop="20dp"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp">
-            <!--<EditText-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:hint="@string/insert_name"-->
-                <!--android:layout_margin="10dp"-->
-                <!--android:id="@+id/et_albumname"-->
-                <!--/>-->
             <com.rengwuxian.materialedittext.MaterialEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
