@@ -1,18 +1,11 @@
 package pictureremind.rty813.xyz.TimeCamera.activity;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.graphics.Palette;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.OrientationEventListener;
@@ -23,20 +16,6 @@ import android.widget.LinearLayout;
 
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
-
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
@@ -98,86 +77,6 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         if (orientationEventListener.canDetectOrientation()) {
             orientationEventListener.enable();
         }
-
-//        设置背景图片
-        Bitmap bitmap = null;
-        File file = new File(getExternalFilesDir(null), "background.jpg");
-        if (file.exists()) {
-            bitmap = BitmapFactory.decodeFile(getExternalFilesDir(null) + "/background.jpg");
-        } else {
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
-        }
-        getWindow().setBackgroundDrawable(new BitmapDrawable(bitmap));
-        Palette.from(bitmap)
-                .generate(new Palette.PaletteAsyncListener() {
-                    @Override
-                    public void onGenerated(@NonNull Palette palette) {
-                        if (palette.getVibrantSwatch() != null) {
-                            Palette.Swatch swatch;
-                            if (palette.getLightVibrantSwatch() != null) {
-                                swatch = palette.getLightVibrantSwatch();
-                            }
-                            else {
-                                swatch = palette.getVibrantSwatch();
-                            }
-                            getWindow().setStatusBarColor(palette.getVibrantSwatch().getRgb());
-                            tb_color = swatch.getRgb();
-                            tb_sub = swatch.getBodyTextColor();
-                            tb_title = swatch.getTitleTextColor();
-                            if (mainFragment != null) {
-                                mainFragment.setToolbarColor();
-                            }
-                        }
-                        else if (palette.getMutedSwatch() != null){
-                            Palette.Swatch swatch = palette.getLightMutedSwatch() == null? palette.getLightMutedSwatch(): palette.getMutedSwatch();
-                            getWindow().setStatusBarColor(palette.getMutedSwatch().getRgb());
-                            tb_color = swatch.getRgb();
-                            tb_sub = swatch.getBodyTextColor();
-                            tb_title = swatch.getTitleTextColor();
-                            if (mainFragment != null) {
-                                mainFragment.setToolbarColor();
-                            }
-
-                        }
-                    }
-                });
-
-//        更新本地背景图片
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final SharedPreferences sharedPreferences = getSharedPreferences("background", Context.MODE_PRIVATE);
-                    String url_local = sharedPreferences.getString("url", null);
-                    String url_remote;
-
-                    HttpURLConnection conn = (HttpURLConnection) new URL("http://139.199.37.92:9999").openConnection();
-                    conn.setConnectTimeout(5000);
-                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    url_remote = br.readLine();
-                    conn.disconnect();
-                    br.close();
-
-                    if (url_local == null || (url_remote != null && !url_local.equals(url_remote))) {
-                        conn = (HttpURLConnection) new URL(url_remote).openConnection();
-                        conn.setConnectTimeout(5000);
-                        InputStream inputStream = conn.getInputStream();
-                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                        File file = new File(getExternalFilesDir(null), "background.jpg");
-                        BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
-                        outputStream.flush();
-                        outputStream.close();
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("url", url_remote);
-                        editor.apply();
-                        Log.d("update background", "end");
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
     }
 
     public int getRotate() {
@@ -290,6 +189,5 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         else{
             getSupportFragmentManager().popBackStack();
         }
-
     }
 }

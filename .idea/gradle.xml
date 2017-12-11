@@ -8,6 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/AutoBackground" />
             <option value="$PROJECT_DIR$/CameraTool" />
             <option value="$PROJECT_DIR$/NumberPickView" />
             <option value="$PROJECT_DIR$/app" />

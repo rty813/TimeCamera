@@ -13,15 +13,12 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.Time;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,7 +33,7 @@ import java.util.ArrayList;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import pictureremind.rty813.xyz.TimeCamera.R;
-import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
+import pictureremind.rty813.xyz.autobackground.AutoBackground;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -118,7 +115,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         btn_commit = view.findViewById(R.id.btn_commit);
         tv_picktime = view.findViewById(R.id.tv_picktime);
         toolbar = view.findViewById(R.id.toolbar);
-        setToolbarColor();
         final LinearLayout ll_choosetime = view.findViewById(R.id.ll_choosetime);
 
         et_albumname.validate("\\d+", "Only Integer Valid!");
@@ -349,25 +345,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
     }
 
-
-    public void setToolbarColor(){
-        int toolbarColor = ((MainActivity)getActivity()).tb_color;
-        int toolbarTextColor = ((MainActivity)getActivity()).tb_title;
-        int subTextColor = ((MainActivity)getActivity()).tb_sub;
-        if (toolbarColor != -1) {
-            toolbar.setBackgroundColor(toolbarColor);
-        }
-        if (toolbarTextColor != -1){
-            toolbar.setTitleTextColor(toolbarTextColor);
-            if (subTextColor != -1){
-                toolbar.setSubtitleTextColor(subTextColor);
-            }
-            else {
-                toolbar.setSubtitleTextColor(toolbarTextColor);
-            }
-        }
-    }
-
     @Override
     public void onPause() {
         super.onPause();
@@ -378,6 +355,9 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
         MiStatInterface.recordPageStart(getActivity(), "NewAlbumFragment");
+        if (MainFragment.themeColor != null){
+            new AutoBackground(getActivity(), toolbar).setColor(MainFragment.themeColor).start();
+        }
     }
 
 }

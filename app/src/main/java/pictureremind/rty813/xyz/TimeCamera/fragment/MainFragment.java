@@ -1,9 +1,6 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,7 +8,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +24,7 @@ import java.util.Map;
 import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 import pictureremind.rty813.xyz.TimeCamera.util.RecyclerviewAdapter;
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.autobackground.AutoBackground;
 
 /**
  * Created by zhang on 2017/12/5.
@@ -40,6 +37,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
     private ArrayList<Map<String, String>> list;
     private onSwipeItemClickListener swipeItemClickListener;
     private Toolbar toolbar;
+    public static int[] themeColor = null;
 
     @Nullable
     @Override
@@ -113,6 +111,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
         }
     }
 
+    public Toolbar getToolbar() {
+        return toolbar;
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()){
@@ -173,6 +175,13 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
     public void onResume() {
         super.onResume();
         MiStatInterface.recordPageStart(getActivity(), "MainFragment");
-        Log.e("id", MiStatInterface.getDeviceID(getActivity()));
+        final AutoBackground autoBackground = new AutoBackground(getActivity(), toolbar).setDefaultBgEnable(true);
+        autoBackground.setOnChangeBackgroundFinishedListener(new AutoBackground.onChangeBackgroundFinishdListener() {
+            @Override
+            public void onFinished() {
+                themeColor = autoBackground.getColor();
+            }
+        }).start();
+
     }
 }
