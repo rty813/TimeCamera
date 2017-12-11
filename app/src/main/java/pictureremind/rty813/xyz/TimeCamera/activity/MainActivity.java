@@ -128,6 +128,17 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                                 mainFragment.setToolbarColor();
                             }
                         }
+                        else if (palette.getMutedSwatch() != null){
+                            Palette.Swatch swatch = palette.getLightMutedSwatch() == null? palette.getLightMutedSwatch(): palette.getMutedSwatch();
+                            getWindow().setStatusBarColor(palette.getMutedSwatch().getRgb());
+                            tb_color = swatch.getRgb();
+                            tb_sub = swatch.getBodyTextColor();
+                            tb_title = swatch.getTitleTextColor();
+                            if (mainFragment != null) {
+                                mainFragment.setToolbarColor();
+                            }
+
+                        }
                     }
                 });
 
