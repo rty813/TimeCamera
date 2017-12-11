@@ -1,1 +1,1 @@
-include ':app', ':CameraTool', ':NumberPickView', ':AutoBackground'
+include ':app', ':CameraTool', ':NumberPickView'

@@ -2,11 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/AutoBackground/autobackground.iml" filepath="$PROJECT_DIR$/AutoBackground/autobackground.iml" />
       <module fileurl="file://$PROJECT_DIR$/CameraTool/CameraTool.iml" filepath="$PROJECT_DIR$/CameraTool/CameraTool.iml" />
       <module fileurl="file://$PROJECT_DIR$/NumberPickView/NumberPickView.iml" filepath="$PROJECT_DIR$/NumberPickView/NumberPickView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PictureRemind.iml" filepath="$PROJECT_DIR$/PictureRemind.iml" />
       <module fileurl="file://C:\Users\doufu\AndroidStudioProjects\TimeCamera\PictureRemind.iml" filepath="C:\Users\doufu\AndroidStudioProjects\TimeCamera\PictureRemind.iml" />
-      <module fileurl="file://$PROJECT_DIR$/TimeCamera.iml" filepath="$PROJECT_DIR$/TimeCamera.iml" />
       <module fileurl="file://C:\Users\zhang\AndroidStudioProjects\PictureRemind\TimeCamera.iml" filepath="C:\Users\zhang\AndroidStudioProjects\PictureRemind\TimeCamera.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
