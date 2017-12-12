@@ -1,6 +1,7 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -93,24 +94,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
 
     }
 
-    public void setToolbarColor(){
-        int toolbarColor = ((MainActivity)getActivity()).tb_color;
-        int toolbarTextColor = ((MainActivity)getActivity()).tb_title;
-        int subTextColor = ((MainActivity)getActivity()).tb_sub;
-        if (toolbarColor != -1) {
-            toolbar.setBackgroundColor(toolbarColor);
-        }
-        if (toolbarTextColor != -1){
-            toolbar.setTitleTextColor(toolbarTextColor);
-            if (subTextColor != -1){
-                toolbar.setSubtitleTextColor(subTextColor);
-            }
-            else {
-                toolbar.setSubtitleTextColor(toolbarTextColor);
-            }
-        }
-    }
-
     public Toolbar getToolbar() {
         return toolbar;
     }
@@ -182,6 +165,5 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
                 themeColor = autoBackground.getColor();
             }
         }).start();
-
     }
 }

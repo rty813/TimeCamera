@@ -23,8 +23,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/btn_commit"
         android:src="@drawable/btn_commit"
-        android:layout_gravity="center_horizontal|bottom"
         android:visibility="gone"
+        android:layout_gravity="center_horizontal|bottom"
         app:rippleColor="#ff0a5d"
         app:elevation="5dp"
         android:layout_marginBottom="20dp"/>

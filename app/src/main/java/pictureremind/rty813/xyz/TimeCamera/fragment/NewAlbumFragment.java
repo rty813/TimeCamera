@@ -4,9 +4,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.Toolbar;
@@ -107,7 +110,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-//        myHandler = new MyHandler();
+        handler = new MyHandler();
         insert_container = view.findViewById(R.id.insert_container);
         iv_preview = view.findViewById(R.id.iv_preview);
         et_albumname = view.findViewById(R.id.et_albumname);
@@ -153,6 +156,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         });
         insert_container.setOnClickListener(this);
         view.findViewById(R.id.btn_picktime).setOnClickListener(this);
+        view.findViewById(R.id.btn_commit).setOnClickListener(this);
         ((Spinner)view.findViewById(R.id.spinner_cyc)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -303,6 +307,10 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 builder.show();
 
                 break;
+            case R.id.btn_commit:
+//                Toast.makeText(getActivity(), "Commit!!!!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(btn_commit, "Commit!!!", Snackbar.LENGTH_SHORT).show();
+                break;
         }
     }
 
@@ -336,9 +344,11 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
             }
         }
         else {
-            System.out.println("show");
             if (btn_commit.getVisibility() == View.GONE){
-                btn_commit.setVisibility(View.VISIBLE);
+                Message msg = handler.obtainMessage();
+                msg.what = 1;
+                msg.obj = btn_commit;
+                handler.handleMessage(msg);
                 btn_commit.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fm_camera_enter));
             }
         }
@@ -360,4 +370,19 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+
+    private static class MyHandler extends Handler{
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case 1:
+                    ((FloatingActionButton) msg.obj).setVisibility(View.VISIBLE);
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
+    private MyHandler handler;
 }
