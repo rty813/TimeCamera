@@ -13,11 +13,14 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment;
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     MainFragment mainFragment;
     CameraFragment cameraFragment;
     NewAlbumFragment newAlbumFragment;
+    BrowseFragment browseFragment;
     public static int width;
     public static int height;
     private OrientationEventListener orientationEventListener;
@@ -123,6 +127,10 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                         .addToBackStack("cameraFragment")
                         .commit();
                 break;
+            case R.id.btn_commit:
+                Toast.makeText(this, "保存成功！", Toast.LENGTH_SHORT).show();
+                getSupportFragmentManager().popBackStack();
+                break;
         }
     }
 
@@ -138,13 +146,12 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
 
     @Override
     public void onItemClick(View viewItem, int position) {
-        cameraFragment = new CameraFragment();
-        cameraFragment.setOnClickListener(MainActivity.this);
+        browseFragment = BrowseFragment.newInstance(null, null);
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                 .hide(mainFragment)
-                .add(R.id.container, cameraFragment)
-                .addToBackStack("cameraFragment")
+                .add(R.id.container, browseFragment)
+                .addToBackStack("browseFragment")
                 .commit();
     }
 
@@ -184,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                 }
             });
             newAlbumFragment.isTookPic = true;
+            newAlbumFragment.filepath = filepath;
             newAlbumFragment.checkCommit();
         }
         else{

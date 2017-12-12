@@ -1,16 +1,20 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -32,7 +36,15 @@ import android.widget.Toast;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import pictureremind.rty813.xyz.TimeCamera.R;
@@ -61,13 +73,13 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     private MaterialEditText et_albumname;
     private NestedScrollView nsv_root;
     public ImageView iv_preview;
-    private String filepath;
     public FrameLayout insert_container;
     private String albumname;
     private FloatingActionButton btn_commit;
     private TextView tv_picktime;
     public boolean isTookPic = false;
     private Toolbar toolbar;
+    public String filepath = null;
 
     public NewAlbumFragment() {
         // Required empty public constructor
@@ -310,6 +322,39 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
             case R.id.btn_commit:
 //                Toast.makeText(getActivity(), "Commit!!!!", Toast.LENGTH_SHORT).show();
                 Snackbar.make(btn_commit, "Commit!!!", Snackbar.LENGTH_SHORT).show();
+                String albumname = et_albumname.getText().toString();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH", Locale.getDefault());
+                String date = dateFormat.format(System.currentTimeMillis());
+                String dir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/TimeCamera/" + albumname + "/" + date + ".jpg";
+                if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+                    Snackbar.make(btn_commit, "保存失败！", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+                try {
+                    int bytesum = 0;
+                    int byteread = 0;
+                    File oldfile = new File(filepath);
+                    if (oldfile.exists()){
+                        InputStream inputStream = new FileInputStream(oldfile);
+                        (new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/TimeCamera/" + albumname)).mkdirs();
+                        new File(dir).createNewFile();
+                        FileOutputStream outputStream = new FileOutputStream(dir);
+                        byte[] buffer = new byte[1444];
+                        int length;
+                        while((byteread = inputStream.read(buffer)) != -1){
+                            bytesum += byteread;
+                            System.out.println(bytesum);
+                            outputStream.write(buffer, 0, byteread);
+                        }
+                        inputStream.close();
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    Snackbar.make(btn_commit, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                }
+                mListener.onClick(view);
                 break;
         }
     }
@@ -367,6 +412,9 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         MiStatInterface.recordPageStart(getActivity(), "NewAlbumFragment");
         if (MainFragment.themeColor != null){
             new AutoBackground(getActivity(), toolbar).setColor(MainFragment.themeColor).start();
+        }
+        if(ContextCompat.checkSelfPermission(getActivity(), "android.permission.WRITE_EXTERNAL_STORAGE") != 0) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, 0);
         }
     }
 
