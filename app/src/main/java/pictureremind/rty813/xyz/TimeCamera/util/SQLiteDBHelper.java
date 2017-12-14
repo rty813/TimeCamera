@@ -9,9 +9,9 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class SQLiteDBHelper extends SQLiteOpenHelper {
-    private static final int DB_VERSION = 1;
-    private static final String DB_NAME = "route.db";
-    public static final String TABLE_NAME = "HISTORY";
+    private static final int DB_VERSION = 2;
+    private static final String DB_NAME = "IMAGES";
+    public static final String TABLE_NAME = "IMAGES";
 
     public SQLiteDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -19,7 +19,9 @@ public class SQLiteDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, ROUTE VARCHAR(500) UNIQUE, TIME VARCHAR(50), ADDRESS VARCHAR(50))";
+        String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +
+                " (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME VARCHAR(30) UNIQUE, CYC VARCHAR(10), " +
+                "CREATE_TIME VARCHAR(40), REMIND_TIME VARCHAR(10))";
         sqLiteDatabase.execSQL(sql);
     }
 

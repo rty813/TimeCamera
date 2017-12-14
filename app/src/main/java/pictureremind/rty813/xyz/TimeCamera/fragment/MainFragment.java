@@ -1,7 +1,6 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
-import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 import pictureremind.rty813.xyz.TimeCamera.util.RecyclerviewAdapter;
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;

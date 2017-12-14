@@ -2,8 +2,11 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -42,12 +45,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Date;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
+import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;
 
 /**
@@ -172,6 +179,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         ((Spinner)view.findViewById(R.id.spinner_cyc)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                tv_picktime.setText("");
                 String[] cycs = getResources().getStringArray(R.array.cyc);
                 str_cyc = cycs[i];
                 if (str_cyc.equals("每小时")){
@@ -220,39 +228,51 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 Time t=new Time();
                 t.setToNow();
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-                        .setTitle("提醒时间")
+                        .setTitle("设置提醒时间")
                         .setNegativeButton("取消", null)
                         .setCancelable(true);
                 switch (str_cyc){
                     case "每周":
                         numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_week, null);
+                        final NumberPickerView np_week_week = numberpicker.findViewById(R.id.np_week);
+                        final NumberPickerView np_hour_week = numberpicker.findViewById(R.id.np_hour);
+                        final NumberPickerView np_minute_week = numberpicker.findViewById(R.id.np_minute);
                         builder.setView(numberpicker);
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
-                                tv_picktime.setText("hh");
+                                String string = np_week_week.getContentByCurrValue() + "/"
+                                        + np_hour_week.getContentByCurrValue() + "/" + np_minute_week.getContentByCurrValue();
+                                tv_picktime.setText(string);
                             }
                         });
                         break;
                     case "每月":
                         numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_month, null);
+                        final NumberPickerView np_hour_month = numberpicker.findViewById(R.id.np_hour);
+                        final NumberPickerView np_day_month = numberpicker.findViewById(R.id.np_day);
+                        final NumberPickerView np_minute_month = numberpicker.findViewById(R.id.np_minute);
                         builder.setView(numberpicker);
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
-                                tv_picktime.setText("hh");
+                                String string = np_day_month.getContentByCurrValue() + "/" +
+                                        np_hour_month.getContentByCurrValue() + "/" + np_minute_month.getContentByCurrValue();
+                                tv_picktime.setText(string);
                             }
                         });
                         break;
                     case "每年":
                         numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_year, null);
-                        final NumberPickerView npday = numberpicker.findViewById(R.id.np_day);
+                        final NumberPickerView np_month_year = numberpicker.findViewById(R.id.np_month);
+                        final NumberPickerView np_hour_year = numberpicker.findViewById(R.id.np_hour);
+                        final NumberPickerView np_minute_year = numberpicker.findViewById(R.id.np_minute);
+                        final NumberPickerView np_day_year = numberpicker.findViewById(R.id.np_day);
+
                         final int[] monthday = new int[]{31,28,31,30,31,30,31,31,30,31,30,31};
-                        npday.setMaxValue(monthday[t.month], true);
-                        npday.setMinValue(1);
-                        npday.setValue(t.monthDay);
+                        np_day_year.setMaxValue(monthday[t.month], true);
+                        np_day_year.setMinValue(1);
+                        np_day_year.setValue(t.monthDay);
 
                         ((NumberPickerView)numberpicker.findViewById(R.id.np_month)).setOnValueChangedListener(new NumberPickerView.OnValueChangeListener() {
                             @Override
@@ -263,26 +283,29 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                                 }
                                 String[] strings = new String[list.size()];
                                 list.toArray(strings);
-                                npday.refreshByNewDisplayedValues(strings);
+                                np_day_year.refreshByNewDisplayedValues(strings);
                             }
                         });
                         builder.setView(numberpicker);
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                Toast.makeText(getActivity(), "每周！", Toast.LENGTH_SHORT).show();
-                                tv_picktime.setText("hh");
+                                String string = np_month_year.getContentByCurrValue() + "/" + np_day_year.getContentByCurrValue()
+                                        + "/" + np_hour_year.getContentByCurrValue() + "/" + np_minute_year.getContentByCurrValue();
+                                tv_picktime.setText(string);
                             }
                         });
                         break;
                     case "每天":
                         numberpicker = LayoutInflater.from(getActivity()).inflate(R.layout.numberpicker_day, null);
+                        final NumberPickerView np_hour_day = numberpicker.findViewById(R.id.np_hour);
+                        final NumberPickerView np_minute_day = numberpicker.findViewById(R.id.np_minute);
                         builder.setView(numberpicker);
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                Toast.makeText(getActivity(), "每天！", Toast.LENGTH_SHORT).show();
-                                tv_picktime.setText("hh");
+                                String string = np_hour_day.getContentByCurrValue() + "/" + np_minute_day.getContentByCurrValue();
+                                tv_picktime.setText(string);
                             }
                         });
                         break;
@@ -321,9 +344,16 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.btn_commit:
 //                Toast.makeText(getActivity(), "Commit!!!!", Toast.LENGTH_SHORT).show();
-                Snackbar.make(btn_commit, "Commit!!!", Snackbar.LENGTH_SHORT).show();
                 String albumname = et_albumname.getText().toString();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH", Locale.getDefault());
+                SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getReadableDatabase();
+                Cursor cursor = database.query(SQLiteDBHelper.TABLE_NAME, null, "NAME=?", new String[]{albumname}, null, null, null);
+                if (cursor.getCount() != 0){
+                    Snackbar.make(btn_commit, "该相册名称已存在，请重试", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+                database.close();
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
                 String date = dateFormat.format(System.currentTimeMillis());
                 String dir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/TimeCamera/" + albumname + "/" + date + ".jpg";
                 if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
@@ -354,6 +384,14 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                     Snackbar.make(btn_commit, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
+                ContentValues values = new ContentValues();
+                values.put("NAME", albumname);
+                values.put("CYC", str_cyc);
+                values.put("REMIND_TIME", tv_picktime.getText().toString());
+                values.put("CREATE_TIME", dateFormat.format(new Date(System.currentTimeMillis())));
+                database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
+                database.insert(SQLiteDBHelper.TABLE_NAME, null, values);
+                database.close();
                 mListener.onClick(view);
                 break;
         }

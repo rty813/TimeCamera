@@ -46,6 +46,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -80,6 +81,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
     private Handler handler;
+    private boolean first_start = true;
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -468,15 +470,41 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     }
 
     @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation anim = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            public void onAnimationStart(Animation animation) {
+                //动画开始
+            }
+            public void onAnimationRepeat(Animation animation) {
+                //动画循环
+            }
+            public void onAnimationEnd(Animation animation) {
+                System.out.println("动画结束！！！！！");
+                startBackgroundThread();
+                if (mTextureView.isAvailable()) {
+                    openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+                } else {
+                    mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+                }
+                first_start = false;
+            }
+        });
+        return anim;
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         System.out.println("onResume");
         MiStatInterface.recordPageStart(getActivity(), "CameraFragment");
-        startBackgroundThread();
-        if (mTextureView.isAvailable()) {
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-        } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        if (!first_start){
+            startBackgroundThread();
+            if (mTextureView.isAvailable()) {
+                openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+            } else {
+                mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+            }
         }
     }
 

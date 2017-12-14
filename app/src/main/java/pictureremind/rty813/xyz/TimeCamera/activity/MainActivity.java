@@ -24,6 +24,7 @@ import pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment;
+import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 
 public class MainActivity extends AppCompatActivity implements CameraFragment.OnBtnClickListener,
         MainFragment.onBtnClickListener, NewAlbumFragment.onBtnClickListener,
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     private static final String MY_APP_KEY = "5611767931467";
     private static final String CHANNEL = "SELF";
 
+    private SQLiteDBHelper dbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         MiStatInterface.setUploadPolicy(MiStatInterface.UPLOAD_POLICY_REALTIME, 0);
         MiStatInterface.enableExceptionCatcher(true);
         URLStatsRecorder.enableAutoRecord();
+
+        dbHelper = new SQLiteDBHelper(this);
 
         WindowManager windowManager = getWindowManager();
         DisplayMetrics metrics = new DisplayMetrics();
@@ -87,6 +92,10 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         return rotate;
     }
 
+    public SQLiteDBHelper getDbHelper() {
+        return dbHelper;
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -102,8 +111,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
                         .commit();
                 break;
             case R.id.btn_return:
-//                dismissCameraFragment();
-                getSupportFragmentManager().popBackStack();
+                onBackPressed();
                 break;
             case R.id.btn_insert:
                 newAlbumFragment = NewAlbumFragment.newInstance(null, null);
