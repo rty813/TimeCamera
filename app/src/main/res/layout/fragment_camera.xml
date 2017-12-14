@@ -18,12 +18,25 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <com.example.android.camera2basic.AutoFitTextureView
-        android:id="@+id/texture"
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true">
+        <com.example.android.camera2basic.AutoFitTextureView
+            android:id="@+id/texture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/test"
+            android:layout_gravity="center_horizontal|top"
+            android:alpha="0.2"
+            android:scaleType="centerInside"
+            />
+    </FrameLayout>
 
     <FrameLayout
         android:id="@+id/control"
