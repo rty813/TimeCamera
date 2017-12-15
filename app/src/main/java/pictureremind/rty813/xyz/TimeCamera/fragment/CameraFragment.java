@@ -770,12 +770,14 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         mCaptureCallback, mBackgroundHandler);
-                                getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        btn_capture.setEnabled(true);
-                                    }
-                                });
+                                if (getActivity() != null){
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            btn_capture.setEnabled(true);
+                                        }
+                                    });
+                                }
                             } catch (CameraAccessException e) {
                                 e.printStackTrace();
                             }
