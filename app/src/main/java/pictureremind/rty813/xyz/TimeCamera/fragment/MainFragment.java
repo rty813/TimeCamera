@@ -2,6 +2,7 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -11,16 +12,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
-import com.yanzhenjie.recyclerview.swipe.SwipeItemClickListener;
-import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
-import com.yanzhenjie.recyclerview.swipe.touch.OnItemMoveListener;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import pictureremind.rty813.xyz.TimeCamera.util.GetFilesUtils;
 import pictureremind.rty813.xyz.TimeCamera.util.RecyclerviewAdapter;
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;
@@ -29,12 +31,12 @@ import pictureremind.rty813.xyz.autobackground.AutoBackground;
  * Created by zhang on 2017/12/5.
  */
 
-public class MainFragment extends Fragment implements View.OnClickListener, OnItemMoveListener {
+public class MainFragment extends Fragment implements View.OnClickListener{
     private onBtnClickListener mListener;
-    private SwipeMenuRecyclerView recyclerView;
+    private RecyclerView recyclerView;
     private RecyclerviewAdapter adapter;
     private ArrayList<Map<String, String>> list;
-    private onSwipeItemClickListener swipeItemClickListener;
+    private onItemClickListener mItemClickListener;
     private Toolbar toolbar;
     public static int[] themeColor = null;
 
@@ -51,43 +53,45 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
         view.findViewById(R.id.btn_insert).setOnClickListener(this);
         toolbar = view.findViewById(R.id.toolbar);
         list = new ArrayList<>();
-        for (int i = 0; i < 100; i++){
-            list.add(null);
-        }
+//        for (int i = 0; i < 100; i++){
+//            list.add(null);
+//        }
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setLongPressDragEnabled(true);
-        recyclerView.setSwipeItemClickListener(new SwipeItemClickListener() {
-            @Override
-            public void onItemClick(View itemView, int position) {
-                swipeItemClickListener.onItemClick(itemView, position);
-            }
-        });
-        recyclerView.setOnItemMoveListener(new OnItemMoveListener() {
-            @Override
-            public boolean onItemMove(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
-                int fromPosition = srcHolder.getAdapterPosition();
-                int toPosition = targetHolder.getAdapterPosition();
-                if (fromPosition < toPosition)
-                    for (int i = fromPosition; i < toPosition; i++)
-                        Collections.swap(list, i, i + 1);
-                else
-                    for (int i = fromPosition; i > toPosition; i--)
-                        Collections.swap(list, i, i - 1);
-
-                adapter.notifyItemMoved(fromPosition, toPosition);
-                return true;
-            }
-
-            @Override
-            public void onItemDismiss(RecyclerView.ViewHolder srcHolder) {
-                int position = srcHolder.getAdapterPosition();
-                list.remove(position);
-                adapter.notifyItemRemoved(position);
-            }
-        });
         adapter = new RecyclerviewAdapter(getActivity(), list);
+        adapter.setItemLongClickListener(new RecyclerviewAdapter.onItemLongClickListener() {
+            @Override
+            public void onItemLongClick(View view, int position) {
+                Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
+            }
+        });
+        adapter.setItemClickListener(new RecyclerviewAdapter.onItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                mItemClickListener.onItemClick(view, position);
+            }
+        });
+        loadAlbum();
+    }
+
+    private void loadAlbum(){
+        String dir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/TimeCamera/";
+        File file = new File(dir);
+        if (!file.exists()){
+            file.mkdirs();
+        }
+        List<Map<String, Object>> albumlist = GetFilesUtils.getInstance().getSonNode(dir);
+
+        for (Map<String, Object> album: albumlist){
+            String albumname = (String) album.get(GetFilesUtils.FILE_INFO_NAME);
+            List<Map<String, Object>> imageslist = GetFilesUtils.getInstance().getSonNode(dir + albumname);
+            if (imageslist.size() > 0){
+                Map<String, String> map = new HashMap<>();
+                map.put("path", imageslist.get(0).get(GetFilesUtils.FILE_INFO_PATH).toString());
+                list.add(new HashMap<>(map));
+            }
+        }
         recyclerView.setAdapter(adapter);
 
     }
@@ -109,15 +113,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
     }
 
     @Override
-    public boolean onItemMove(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
-        return false;
-    }
-
-    @Override
-    public void onItemDismiss(RecyclerView.ViewHolder srcHolder) {
-
-    }
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof onBtnClickListener) {
@@ -133,12 +128,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnIt
         mListener = null;
     }
 
-    public interface onSwipeItemClickListener{
+    public interface onItemClickListener {
         public void onItemClick(View viewItem, int position);
     }
 
-    public void setSwipeItemClickListener(onSwipeItemClickListener listener){
-        this.swipeItemClickListener = listener;
+    public void setItemClickListener(onItemClickListener listener){
+        this.mItemClickListener = listener;
     }
 
 

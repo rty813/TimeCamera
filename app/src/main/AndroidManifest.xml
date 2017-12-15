@@ -21,7 +21,8 @@
         </activity>
         <activity
             android:name="pictureremind.rty813.xyz.TimeCamera.activity.MainActivity"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:hardwareAccelerated="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

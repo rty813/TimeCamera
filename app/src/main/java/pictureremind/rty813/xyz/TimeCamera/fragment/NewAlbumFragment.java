@@ -451,9 +451,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         if (MainFragment.themeColor != null){
             new AutoBackground(getActivity(), toolbar).setColor(MainFragment.themeColor).start();
         }
-        if(ContextCompat.checkSelfPermission(getActivity(), "android.permission.WRITE_EXTERNAL_STORAGE") != 0) {
-            ActivityCompat.requestPermissions(getActivity(), new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, 0);
-        }
     }
 
 

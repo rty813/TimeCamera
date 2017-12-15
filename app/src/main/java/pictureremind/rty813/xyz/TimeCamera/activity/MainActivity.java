@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -14,8 +16,8 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
 
@@ -28,7 +30,7 @@ import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 
 public class MainActivity extends AppCompatActivity implements CameraFragment.OnBtnClickListener,
         MainFragment.onBtnClickListener, NewAlbumFragment.onBtnClickListener,
-        MainFragment.onSwipeItemClickListener, CameraFragment.onCaptureSucceed{
+        MainFragment.onItemClickListener, CameraFragment.onCaptureSucceed{
 
     MainFragment mainFragment;
     CameraFragment cameraFragment;
@@ -58,19 +60,21 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         URLStatsRecorder.enableAutoRecord();
 
         dbHelper = new SQLiteDBHelper(this);
-
+        Fresco.initialize(this);
         WindowManager windowManager = getWindowManager();
         DisplayMetrics metrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getMetrics(metrics);
         width = metrics.widthPixels;
         height = metrics.heightPixels;
-
+        if(ContextCompat.checkSelfPermission(this, "android.permission.WRITE_EXTERNAL_STORAGE") != 0) {
+            ActivityCompat.requestPermissions(this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, 0);
+        }
         System.out.println(width + " " + height);
         if (null == savedInstanceState) {
             if (null == mainFragment) {
                 Log.e("Err", "Null == mainFragment");
                 mainFragment = new MainFragment();
-                mainFragment.setSwipeItemClickListener(this);
+                mainFragment.setItemClickListener(this);
             }
             getSupportFragmentManager().beginTransaction().setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE).
                     replace(R.id.container, mainFragment, "mainFragment").commit();

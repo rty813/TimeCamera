@@ -1,33 +1,27 @@
 package pictureremind.rty813.xyz.TimeCamera.util;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v7.view.menu.MenuView;
-import android.support.v7.widget.GridLayoutManager;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.backends.pipeline.PipelineDraweeController;
+import com.facebook.drawee.controller.AbstractDraweeController;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.squareup.picasso.Picasso;
 
-import net.bither.util.NativeUtil;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
@@ -40,6 +34,8 @@ import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 public class RecyclerviewAdapter extends RecyclerView.Adapter {
     private ArrayList<Map<String, String>> list;
     private Context mContext;
+    private onItemLongClickListener mLongClickListener;
+    private onItemClickListener mClickListener;
 
     public RecyclerviewAdapter(Context context, ArrayList<Map<String, String>> list){
         super();
@@ -49,38 +45,57 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter {
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new MyViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_imageview, parent, false));
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_imageview, parent, false);
+        view.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if (mLongClickListener != null){
+                    mLongClickListener.onItemLongClick(view, (Integer) view.getTag());
+                }
+                return true;
+            }
+        });
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mClickListener != null){
+                    mClickListener.onItemClick(view, (Integer) view.getTag());
+                }
+            }
+        });
+        return new MyViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         MyViewHolder viewHolder = (MyViewHolder) holder;
         viewHolder.itemView.setTag(position);
-        ImageView imageView = ((MyViewHolder) holder).getIv_item();
+        SimpleDraweeView imageView = (SimpleDraweeView) ((MyViewHolder) holder).getIv_item();
         FrameLayout ll_root = ((MyViewHolder) holder).getLl_root();
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        int pic;
-        if (position % 2 == 1){
-            pic = R.drawable.test2;
-            BitmapFactory.decodeResource(mContext.getResources(), R.drawable.test2, options);
-        }
-        else{
-            pic = R.drawable.test;
-            BitmapFactory.decodeResource(mContext.getResources(), R.drawable.test, options); // 此时返回的bitmap为null
-        }
+
+        String filepath = list.get(position).get("path");
+        BitmapFactory.decodeFile(filepath, options);
+
         int width = viewHolder.getWidth();
         int height = (int)(width * ((float)options.outHeight / options.outWidth));
 
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) ll_root.getLayoutParams();
         layoutParams.height = height;
-        Picasso.with(mContext).load(pic)
-                .centerInside().resize(width, height)
-                .into(imageView);
-//        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.test);
-//        float prop = (float)bitmap.getHeight() / bitmap.getWidth();
-//        GridLayoutManager.LayoutParams layoutParams = (GridLayoutManager.LayoutParams) ll_root.getLayoutParams();
-//        layoutParams.height = (int)(layoutParams.width * prop);
+        ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(filepath)))
+                .setResizeOptions(new ResizeOptions(width, height))
+                .build();
+
+        AbstractDraweeController controller = Fresco.newDraweeControllerBuilder()
+                .setOldController(imageView.getController())
+                .setImageRequest(request)
+                .build();
+//        PipelineDraweeController controller = Fresco.newDraweeControllerBuilder()
+//                .setOldController(imageView.getController())
+//                .setImageRequest(request)
+//                .build();
+        imageView.setController(controller);
     }
 
     @Override
@@ -113,5 +128,22 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter {
             return ll_root;
         }
     }
+
+    public void setItemLongClickListener(onItemLongClickListener longClickListener){
+        this.mLongClickListener = longClickListener;
+    }
+
+    public void setItemClickListener(onItemClickListener clickListener){
+        this.mClickListener = clickListener;
+    }
+    
+    public interface onItemLongClickListener {
+        void onItemLongClick(View view, int position);
+    }
+
+    public interface onItemClickListener{
+        void onItemClick(View view, int position);
+    }
+
 }
 
