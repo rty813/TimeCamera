@@ -180,9 +180,8 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                                 System.out.println("asdfasdf");
                             }
                         })
-                        .setPositiveButton("取消", null);
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                        .setNegativeButton("取消", null)
+                        .show();
                 break;
         }
         return super.onOptionsItemSelected(item);

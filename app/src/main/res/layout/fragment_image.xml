@@ -1,0 +1,18 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    tools:context="pictureremind.rty813.xyz.TimeCamera.fragment.ImageFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/draweeView"
+        android:layout_gravity="center"
+        fresco:actualImageScaleType="centerInside"
+        fresco:placeholderImage="@drawable/wait"
+        />
+
+</FrameLayout>
