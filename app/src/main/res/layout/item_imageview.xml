@@ -5,15 +5,15 @@
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:background="@drawable/bg_alpha"
     android:layout_margin="10dp"
+    android:padding="5dp"
     android:id="@+id/ll_root">
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="5dp"
         android:id="@+id/iv_item"
         android:layout_gravity="center"
-        android:scaleType="centerInside"
+        fresco:actualImageScaleType="centerInside"
         fresco:placeholderImage="@drawable/wait"
         />
 </FrameLayout>

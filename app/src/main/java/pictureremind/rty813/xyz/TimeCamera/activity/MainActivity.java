@@ -28,9 +28,8 @@ import pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment;
 import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 
-public class MainActivity extends AppCompatActivity implements CameraFragment.OnBtnClickListener,
-        MainFragment.onBtnClickListener, NewAlbumFragment.onBtnClickListener,
-        MainFragment.onItemClickListener, CameraFragment.onCaptureSucceed{
+public class MainActivity extends AppCompatActivity implements MainFragment.onBtnClickListener,
+        NewAlbumFragment.onBtnClickListener, MainFragment.onItemClickListener, CameraFragment.onCaptureSucceed{
 
     MainFragment mainFragment;
     CameraFragment cameraFragment;
@@ -58,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
         MiStatInterface.setUploadPolicy(MiStatInterface.UPLOAD_POLICY_REALTIME, 0);
         MiStatInterface.enableExceptionCatcher(true);
         URLStatsRecorder.enableAutoRecord();
-
         dbHelper = new SQLiteDBHelper(this);
         Fresco.initialize(this);
         WindowManager windowManager = getWindowManager();
@@ -104,8 +102,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.button:
-                cameraFragment = new CameraFragment();
-                cameraFragment.setOnClickListener(this);
+                cameraFragment = CameraFragment.newInstance(null);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                         .hide(mainFragment)
@@ -113,9 +110,6 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
 //                        .replace(R.id.container, cameraFragment)
                         .addToBackStack("cameraFragment")
                         .commit();
-                break;
-            case R.id.btn_return:
-                onBackPressed();
                 break;
             case R.id.btn_insert:
                 newAlbumFragment = NewAlbumFragment.newInstance(null, null);
@@ -129,8 +123,7 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
             case R.id.insert_container:
 //                Toast.makeText(this, "HH", Toast.LENGTH_SHORT).show();
 
-                cameraFragment = new CameraFragment();
-                cameraFragment.setOnClickListener(this);
+                cameraFragment = CameraFragment.newInstance(null);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                         .hide(newAlbumFragment)
@@ -158,7 +151,9 @@ public class MainActivity extends AppCompatActivity implements CameraFragment.On
 
     @Override
     public void onItemClick(View viewItem, int position) {
-        browseFragment = BrowseFragment.newInstance(null, null);
+        String filepath = mainFragment.getList().get(position).get("dirpath");
+        String albumname = mainFragment.getList().get(position).get("name");
+        browseFragment = BrowseFragment.newInstance(filepath, albumname);
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                 .hide(mainFragment)

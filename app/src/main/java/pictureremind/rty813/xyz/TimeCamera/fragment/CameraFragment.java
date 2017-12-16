@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -29,10 +30,12 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -51,6 +54,13 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.android.camera2basic.AutoFitTextureView;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.common.RotationOptions;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.squareup.picasso.Picasso;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
 import java.io.File;
@@ -374,9 +384,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         }
 
     };
-    private OnBtnClickListener btnListener;
-    private onCaptureSucceed mSucceed;
+    private onCaptureSucceed mSucceed = null;
     private Button btn_capture;
+    private String coverPath = null;
+    private SimpleDraweeView simpleDraweeView;
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -444,8 +455,12 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         }
     }
 
-    public static CameraFragment newInstance() {
-        return new CameraFragment();
+    public static CameraFragment newInstance(@Nullable String coverPath) {
+        CameraFragment cameraFragment = new CameraFragment();
+        Bundle args = new Bundle();
+        args.putString("coverPath", coverPath);
+        cameraFragment.setArguments(args);
+        return cameraFragment;
     }
 
     @Override
@@ -459,18 +474,26 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         btn_capture = view.findViewById(R.id.picture);
         view.findViewById(R.id.picture).setOnClickListener(this);
         view.findViewById(R.id.info).setOnClickListener(this);
-        view.findViewById(R.id.btn_return).setOnClickListener(this);
-        mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
+        mTextureView = view.findViewById(R.id.texture);
+        simpleDraweeView = view.findViewById(R.id.draweeView);
+
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        mFile = new File(getActivity().getExternalFilesDir(null), "pic" + System.currentTimeMillis() + ".jpg");
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null){
+            coverPath = getArguments().getString("coverPath");
+        }
+        mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
     }
 
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        if (nextAnim == 0){
+            first_start = false;
+            return null;
+        }
         Animation anim = AnimationUtils.loadAnimation(getActivity(), nextAnim);
         anim.setAnimationListener(new Animation.AnimationListener() {
             public void onAnimationStart(Animation animation) {
@@ -494,18 +517,50 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        if (isVisibleToUser){
+            if (!first_start && mBackgroundThread == null){
+                System.out.println("start!BackgroundThread");
+                startBackgroundThread();
+                if (mTextureView.isAvailable()) {
+                    openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+                } else {
+                    mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+                }
+
+                if (coverPath != null){
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = true;
+                    BitmapFactory.decodeFile(coverPath, options);
+                    int width = simpleDraweeView.getWidth();
+                    float ratio = (float)options.outHeight / options.outWidth;
+                    ImageRequest request;
+                    if (options.outWidth > options.outHeight){
+                        request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
+                                .setResizeOptions(new ResizeOptions((int) (width / ratio), width))
+                                .setRotationOptions(RotationOptions.forceRotation(RotationOptions.ROTATE_90))
+                                .build();
+                    }
+                    else{
+                        request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
+                                .setResizeOptions(new ResizeOptions(width, (int) (width * ratio)))
+                                .build();
+                    }
+
+                    simpleDraweeView.setController(Fresco.newDraweeControllerBuilder()
+                            .setImageRequest(request).build());
+                    simpleDraweeView.setAlpha(0.3f);
+                }
+            }
+        }
+        super.setUserVisibleHint(isVisibleToUser);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         System.out.println("onResume");
         MiStatInterface.recordPageStart(getActivity(), "CameraFragment");
-        if (!first_start){
-            startBackgroundThread();
-            if (mTextureView.isAvailable()) {
-                openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-            } else {
-                mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-            }
-        }
     }
 
     @Override
@@ -715,6 +770,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
      * Stops the background thread and its {@link Handler}.
      */
     private void stopBackgroundThread() {
+        if (mBackgroundThread == null){
+            mBackgroundHandler = null;
+            return;
+        }
         mBackgroundThread.quitSafely();
         try {
             mBackgroundThread.join();
@@ -967,9 +1026,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                 }
                 break;
             }
-            case R.id.btn_return:
-                this.btnListener.onClick(view);
-                break;
         }
     }
 
@@ -1102,24 +1158,21 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         }
     }
 
-    public interface OnBtnClickListener{
-        public void onClick(View v);
-    }
-
-    public void setOnClickListener(OnBtnClickListener onClickListener){
-        this.btnListener = onClickListener;
-    }
-
     public interface onCaptureSucceed{
         public void onSucceed(String filepath);
     }
 
+    public void setmSucceed(onCaptureSucceed mSucceed) {
+        this.mSucceed = mSucceed;
+    }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof onCaptureSucceed) {
-            mSucceed = (onCaptureSucceed) context;
+            if (mSucceed == null){
+                mSucceed = (onCaptureSucceed) context;
+            }
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement onCaptureSucceed");

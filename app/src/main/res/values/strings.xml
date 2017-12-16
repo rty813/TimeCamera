@@ -21,4 +21,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="insert_name">相册名称</string>
     <string name="insert_cyc">请选择周期</string>
+    <string name="menu_delete">删除相册</string>
 </resources>

@@ -88,8 +88,10 @@ public class MainFragment extends Fragment implements View.OnClickListener{
             List<Map<String, Object>> imageslist = GetFilesUtils.getInstance().getSonNode(dir + albumname);
             if (imageslist.size() > 0){
                 Map<String, String> map = new HashMap<>();
-                map.put("path", imageslist.get(0).get(GetFilesUtils.FILE_INFO_PATH).toString());
-                list.add(new HashMap<>(map));
+                map.put("path", imageslist.get(imageslist.size() - 1).get(GetFilesUtils.FILE_INFO_PATH).toString());
+                map.put("dirpath", dir + albumname);
+                map.put("name", albumname);
+                list.add(0, new HashMap<>(map));
             }
         }
         recyclerView.setAdapter(adapter);
@@ -158,5 +160,9 @@ public class MainFragment extends Fragment implements View.OnClickListener{
                 themeColor = autoBackground.getColor();
             }
         }).start();
+    }
+
+    public ArrayList<Map<String, String>> getList() {
+        return list;
     }
 }

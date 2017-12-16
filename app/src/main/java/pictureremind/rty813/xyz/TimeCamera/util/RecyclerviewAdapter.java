@@ -91,10 +91,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter {
                 .setOldController(imageView.getController())
                 .setImageRequest(request)
                 .build();
-//        PipelineDraweeController controller = Fresco.newDraweeControllerBuilder()
-//                .setOldController(imageView.getController())
-//                .setImageRequest(request)
-//                .build();
+
         imageView.setController(controller);
     }
 
