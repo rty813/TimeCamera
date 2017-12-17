@@ -93,7 +93,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
     private Handler handler;
-    private boolean first_start = true;
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -390,6 +389,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private FloatingActionButton btn_capture;
     private String coverPath = null;
     private SimpleDraweeView simpleDraweeView;
+    private boolean hasUiPrepared = false;
+    private boolean hasInit = true;
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -477,7 +478,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         view.findViewById(R.id.picture).setOnClickListener(this);
         mTextureView = view.findViewById(R.id.texture);
         simpleDraweeView = view.findViewById(R.id.draweeView);
-
+        hasUiPrepared = true;
     }
 
     @Override
@@ -492,7 +493,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
         if (nextAnim == 0){
-            first_start = false;
             return null;
         }
         Animation anim = AnimationUtils.loadAnimation(getActivity(), nextAnim);
@@ -511,7 +511,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                 } else {
                     mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
                 }
-                first_start = false;
             }
         });
         return anim;
@@ -520,41 +519,51 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         if (isVisibleToUser){
-            if (!first_start && mBackgroundThread == null){
-                System.out.println("start!BackgroundThread");
-                startBackgroundThread();
-                if (mTextureView.isAvailable()) {
-                    openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-                } else {
-                    mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-                }
-
-                if (coverPath != null){
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inJustDecodeBounds = true;
-                    BitmapFactory.decodeFile(coverPath, options);
-                    int width = simpleDraweeView.getWidth();
-                    float ratio = (float)options.outHeight / options.outWidth;
-                    ImageRequest request;
-                    if (options.outWidth > options.outHeight){
-                        request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
-                                .setResizeOptions(new ResizeOptions((int) (width / ratio), width))
-                                .setRotationOptions(RotationOptions.forceRotation(RotationOptions.ROTATE_90))
-                                .build();
-                    }
-                    else{
-                        request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
-                                .setResizeOptions(new ResizeOptions(width, (int) (width * ratio)))
-                                .build();
-                    }
-
-                    simpleDraweeView.setController(Fresco.newDraweeControllerBuilder()
-                            .setImageRequest(request).build());
-                    simpleDraweeView.setAlpha(0.3f);
-                }
+            if (mBackgroundThread == null && hasUiPrepared){
+               init();
             }
+            hasInit = hasUiPrepared;
         }
         super.setUserVisibleHint(isVisibleToUser);
+    }
+
+    private void init() {
+        if (simpleDraweeView.getWidth() == 0){
+            hasInit = false;
+            return;
+        }
+
+        System.out.println("start!BackgroundThread");
+        startBackgroundThread();
+        if (mTextureView.isAvailable()) {
+            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+        } else {
+            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        }
+
+        if (coverPath != null){
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(coverPath, options);
+            int width = simpleDraweeView.getWidth();
+            float ratio = (float)options.outHeight / options.outWidth;
+            ImageRequest request;
+            if (options.outWidth > options.outHeight){
+                request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
+                        .setResizeOptions(new ResizeOptions((int) (width / ratio), width))
+                        .setRotationOptions(RotationOptions.forceRotation(RotationOptions.ROTATE_90))
+                        .build();
+            }
+            else{
+                request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
+                        .setResizeOptions(new ResizeOptions(width, (int) (width * ratio)))
+                        .build();
+            }
+
+            simpleDraweeView.setController(Fresco.newDraweeControllerBuilder()
+                    .setImageRequest(request).build());
+            simpleDraweeView.setAlpha(0.3f);
+        }
     }
 
     @Override
@@ -564,6 +573,9 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         MiStatInterface.recordPageStart(getActivity(), "CameraFragment");
         if (MainFragment.themeColor != null){
             btn_capture.setBackgroundTintList(ColorStateList.valueOf(MainFragment.themeColor[0]));
+        }
+        if (!hasInit){
+            init();
         }
     }
 

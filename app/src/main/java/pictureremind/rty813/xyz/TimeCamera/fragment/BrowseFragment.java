@@ -118,6 +118,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         toolbar = view.findViewById(R.id.toolbar);
+        toolbar.setSubtitle(name);
         fab_add = view.findViewById(R.id.fab_add);
         fab_remove = view.findViewById(R.id.fab_remove);
         fab_replace = view.findViewById(R.id.fab_replace);
@@ -201,6 +202,11 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             case R.id.fab_replace:
                 break;
             case R.id.fab_remove:
+                if (list.size() == 1){
+                    Snackbar.make(fab_menu, "无法删除最后一张照片", Snackbar.LENGTH_SHORT).show();
+                    fab_menu.close(true);
+                    return;
+                }
                 final int pos = viewpager.getCurrentItem() - 1;
                 final String filepath = list.get(pos);
                 list.remove(pos);
@@ -208,7 +214,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                 tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
 
                 isCancel = false;
-                Snackbar.make(fab_menu, "删除记录", Snackbar.LENGTH_LONG)
+                Snackbar.make(fab_menu, "删除记录", Snackbar.LENGTH_SHORT)
                         .setAction("撤销", new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -226,21 +232,16 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     }
 
     private class MyCallBack extends Snackbar.Callback{
-        private String name;
         private String filepath;
         public MyCallBack(String filepath){
             super();
             this.filepath = filepath;
-            String[] split = filepath.split("/");
-            int len = split.length;
-            this.name = split[len - 1];
         }
         @Override
         public void onDismissed(Snackbar transientBottomBar, int event) {
             if (!isCancel) {
-//                SQLiteDatabase database = ((MainActivity) getActivity()).getDbHelper().getWritableDatabase();
-//                database.delete(SQLiteDBHelper.TABLE_NAME, "NAME=?", new String[]{filepath});
-//                database.close();
+                deleteFile(filepath);
+                mOnChangedListener.onChanged(CHANGE);
                 super.onDismissed(transientBottomBar, event);
             }
         }
@@ -272,6 +273,8 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                         .setNegativeButton("取消", null)
                         .show();
                 break;
+            case R.id.menu_alpha:
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -284,7 +287,8 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         @Override
         public Fragment getItem(int position) {
             if (position == 0) {
-                CameraFragment cameraFragment = CameraFragment.newInstance(list.get(0));
+                String str = list.size() == 0? null : list.get(0);
+                CameraFragment cameraFragment = CameraFragment.newInstance(str);
                 cameraFragment.setmSucceed(new CameraFragment.onCaptureSucceed() {
                     @Override
                     public void onSucceed(String filepath) {

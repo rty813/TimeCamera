@@ -20,6 +20,8 @@ import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,9 +92,10 @@ public class MainFragment extends Fragment implements View.OnClickListener{
         for (Map<String, Object> album: albumlist){
             String albumname = (String) album.get(GetFilesUtils.FILE_INFO_NAME);
             List<Map<String, Object>> imageslist = GetFilesUtils.getInstance().getSonNode(dir + albumname);
+            Collections.reverse(imageslist);
             if (imageslist.size() > 0){
                 Map<String, String> map = new HashMap<>();
-                map.put("path", imageslist.get(imageslist.size() - 1).get(GetFilesUtils.FILE_INFO_PATH).toString());
+                map.put("path", imageslist.get(0).get(GetFilesUtils.FILE_INFO_PATH).toString());
                 map.put("dirpath", dir + albumname);
                 map.put("name", albumname);
                 if (!list.contains(map)){
