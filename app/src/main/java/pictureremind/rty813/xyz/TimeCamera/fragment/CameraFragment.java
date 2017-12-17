@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -36,6 +37,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -385,7 +387,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
 
     };
     private onCaptureSucceed mSucceed = null;
-    private Button btn_capture;
+    private FloatingActionButton btn_capture;
     private String coverPath = null;
     private SimpleDraweeView simpleDraweeView;
 
@@ -473,7 +475,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         btn_capture = view.findViewById(R.id.picture);
         view.findViewById(R.id.picture).setOnClickListener(this);
-        view.findViewById(R.id.info).setOnClickListener(this);
         mTextureView = view.findViewById(R.id.texture);
         simpleDraweeView = view.findViewById(R.id.draweeView);
 
@@ -561,6 +562,9 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         super.onResume();
         System.out.println("onResume");
         MiStatInterface.recordPageStart(getActivity(), "CameraFragment");
+        if (MainFragment.themeColor != null){
+            btn_capture.setBackgroundTintList(ColorStateList.valueOf(MainFragment.themeColor[0]));
+        }
     }
 
     @Override

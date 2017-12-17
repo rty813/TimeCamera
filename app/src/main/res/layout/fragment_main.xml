@@ -17,12 +17,6 @@
             app:subtitle="拍照神器"
             app:subtitleTextColor="@android:color/white"
             app:titleTextColor="@android:color/white">
-            <Button
-                android:id="@+id/button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/btn_shot"
-                android:layout_gravity="right"/>
         </android.support.v7.widget.Toolbar>
     </android.support.design.widget.AppBarLayout>
 

@@ -40,9 +40,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
     private OrientationEventListener orientationEventListener;
     private int rotate;
     //    private MyHandler mHandler = null;
-    public int tb_color = -1;
-    public int tb_title = -1;
-    public int tb_sub = -1;
     private static final String MY_APPID = "2882303761517679467";
     private static final String MY_APP_KEY = "5611767931467";
     private static final String CHANNEL = "SELF";
@@ -101,16 +98,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.button:
-                cameraFragment = CameraFragment.newInstance(null);
-                getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
-                        .hide(mainFragment)
-                        .add(R.id.container, cameraFragment)
-//                        .replace(R.id.container, cameraFragment)
-                        .addToBackStack("cameraFragment")
-                        .commit();
-                break;
             case R.id.btn_insert:
                 newAlbumFragment = NewAlbumFragment.newInstance(null, null);
                 getSupportFragmentManager().beginTransaction()
@@ -135,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
             case R.id.btn_commit:
                 Toast.makeText(this, "保存成功！", Toast.LENGTH_SHORT).show();
                 getSupportFragmentManager().popBackStack();
+                mainFragment.notifyInsert();
                 break;
         }
     }
@@ -154,6 +142,12 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         String filepath = mainFragment.getList().get(position).get("dirpath");
         String albumname = mainFragment.getList().get(position).get("name");
         browseFragment = BrowseFragment.newInstance(filepath, albumname);
+        browseFragment.setmOnChangedListener(new BrowseFragment.onChanged() {
+            @Override
+            public void onChanged(int type) {
+                mainFragment.notifyChange(type);
+            }
+        });
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                 .hide(mainFragment)

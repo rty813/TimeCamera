@@ -77,4 +77,12 @@ public class ImageFragment extends Fragment {
             }
         });
     }
+
+//    @Override
+//    public void setUserVisibleHint(boolean isVisibleToUser) {
+//        if (isVisibleToUser){
+//
+//        }
+//        super.setUserVisibleHint(isVisibleToUser);
+//    }
 }

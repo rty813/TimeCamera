@@ -1,14 +1,14 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -22,8 +22,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,14 +36,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 import pictureremind.rty813.xyz.TimeCamera.util.GetFilesUtils;
+import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;
+
+import static pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment.themeColor;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -59,9 +65,16 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     private ViewPager viewpager;
     private FragmentManager fragmentManager;
     private ArrayList<String> list;
-    private FloatingActionButton fab_takepic;
     private MyAdapter adapter;
-
+    private onChanged mOnChangedListener;
+    public static final int DELETE = 1;
+    public static final int CHANGE = 0;
+    private FloatingActionButton fab_add;
+    private FloatingActionButton fab_remove;
+    private FloatingActionButton fab_replace;
+    private FloatingActionMenu fab_menu;
+    private boolean isCancel;
+    private TextView tv_imageNumHint;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -105,6 +118,14 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         toolbar = view.findViewById(R.id.toolbar);
+        fab_add = view.findViewById(R.id.fab_add);
+        fab_remove = view.findViewById(R.id.fab_remove);
+        fab_replace = view.findViewById(R.id.fab_replace);
+        fab_menu = view.findViewById(R.id.fab_menu);
+        fab_menu.setClosedOnTouchOutside(true);
+        fab_menu.hideMenuButton(true);
+        fab_menu.setMenuButtonShowAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fab_scale_up));
+        fab_menu.setMenuButtonHideAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fab_scale_down));
         setHasOptionsMenu(true);
         ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
         fragmentManager = getChildFragmentManager();
@@ -115,7 +136,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             list.add(0, image.get(GetFilesUtils.FILE_INFO_PATH).toString());
         }
 
-        final TextView tv_imageNumHint = view.findViewById(R.id.tv_imageNumHint);
+        tv_imageNumHint = view.findViewById(R.id.tv_imageNumHint);
         tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", 1, list.size()));
         viewpager = view.findViewById(R.id.viewpager);
         adapter = new MyAdapter(fragmentManager);
@@ -129,9 +150,14 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
 
             @Override
             public void onPageSelected(int position) {
-                int visible = position == 0 ? View.GONE : View.VISIBLE;
-                fab_takepic.setVisibility(visible);
-                tv_imageNumHint.setVisibility(visible);
+                if (position == 0){
+                    fab_menu.hideMenuButton(true);
+                    tv_imageNumHint.setVisibility(View.GONE);
+                }
+                else{
+                    fab_menu.showMenuButton(true);
+                    tv_imageNumHint.setVisibility(View.VISIBLE);
+                }
                 tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", position, list.size()));
             }
 
@@ -139,27 +165,86 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             public void onPageScrollStateChanged(int state) {
             }
         });
-        fab_takepic = view.findViewById(R.id.fab_takepic);
-        fab_takepic.setOnClickListener(this);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                fab_menu.showMenuButton(true);
+            }
+        }, 200);
+        fab_replace.setOnClickListener(this);
+        fab_remove.setOnClickListener(this);
+        fab_add.setOnClickListener(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (MainFragment.themeColor != null) {
-            new AutoBackground(getActivity(), toolbar).setColor(MainFragment.themeColor).start();
+        if (themeColor != null) {
+            new AutoBackground(getActivity(), toolbar).setColor(themeColor).start();
+            fab_menu.setMenuButtonColorNormal(themeColor[0]);
+            fab_menu.setMenuButtonColorPressed(themeColor[1]);
+            fab_add.setColorNormal(themeColor[0]);
+            fab_add.setColorPressed(themeColor[1]);
+            fab_remove.setColorNormal(themeColor[0]);
+            fab_remove.setColorPressed(themeColor[1]);
+            fab_replace.setColorNormal(themeColor[0]);
+            fab_replace.setColorPressed(themeColor[1]);
         }
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.fab_takepic:
+            case R.id.fab_add:
                 viewpager.setCurrentItem(0);
                 break;
+            case R.id.fab_replace:
+                break;
+            case R.id.fab_remove:
+                final int pos = viewpager.getCurrentItem() - 1;
+                final String filepath = list.get(pos);
+                list.remove(pos);
+                adapter.notifyDataSetChanged();
+                tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
+
+                isCancel = false;
+                Snackbar.make(fab_menu, "删除记录", Snackbar.LENGTH_LONG)
+                        .setAction("撤销", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                isCancel = true;
+                                list.add(pos, filepath);
+                                adapter.notifyDataSetChanged();
+                                tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
+                            }
+                        })
+                        .addCallback(new MyCallBack(filepath))
+                        .show();
+                break;
         }
+        fab_menu.close(true);
     }
 
+    private class MyCallBack extends Snackbar.Callback{
+        private String name;
+        private String filepath;
+        public MyCallBack(String filepath){
+            super();
+            this.filepath = filepath;
+            String[] split = filepath.split("/");
+            int len = split.length;
+            this.name = split[len - 1];
+        }
+        @Override
+        public void onDismissed(Snackbar transientBottomBar, int event) {
+            if (!isCancel) {
+//                SQLiteDatabase database = ((MainActivity) getActivity()).getDbHelper().getWritableDatabase();
+//                database.delete(SQLiteDBHelper.TABLE_NAME, "NAME=?", new String[]{filepath});
+//                database.close();
+                super.onDismissed(transientBottomBar, event);
+            }
+        }
+    }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 //        super.onCreateOptionsMenu(menu, inflater);
@@ -173,11 +258,15 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             case R.id.menu_delete:
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setTitle("警告")
-                        .setMessage("真的要删除本相册吗？")
+                        .setMessage("真的要删除本相册吗？\n数据删除不可恢复！")
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                System.out.println("asdfasdf");
+                                SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
+                                database.delete(SQLiteDBHelper.TABLE_NAME, "NAME=?", new String[]{name});
+                                deleteDirectory(path);
+                                mOnChangedListener.onChanged(DELETE);
+                                getActivity().onBackPressed();
                             }
                         })
                         .setNegativeButton("取消", null)
@@ -186,27 +275,6 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         }
         return super.onOptionsItemSelected(item);
     }
-
-//    @Override
-//    public boolean onMenuItemClick(MenuItem item) {
-//        switch (item.getItemId()){
-//            case R.id.menu_delete:
-//                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-//                builder.setTitle("警告")
-//                        .setMessage("真的要删除本相册吗？")
-//                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialogInterface, int i) {
-//
-//                            }
-//                        })
-//                        .setPositiveButton("取消", null)
-//                        .create()
-//                        .show();
-//        }
-//        return true;
-//    }
-
     private class MyAdapter extends FragmentStatePagerAdapter{
 
         public MyAdapter(FragmentManager fm) {
@@ -259,6 +327,9 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                                 viewpager.setCurrentItem(1);
                             }
                         });
+                        if (mOnChangedListener != null){
+                            mOnChangedListener.onChanged(CHANGE);
+                        }
                     }
                 });
                 return cameraFragment;
@@ -278,4 +349,59 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         }
     }
 
+
+    public interface onChanged{
+        public void onChanged(int type);
+    }
+
+    public void setmOnChangedListener(onChanged mOnChangedListener) {
+        this.mOnChangedListener = mOnChangedListener;
+    }
+
+    /**
+     * 删除单个文件
+     * @param   filePath    被删除文件的文件名
+     * @return 文件删除成功返回true，否则返回false
+     */
+    public boolean deleteFile(String filePath) {
+        File file = new File(filePath);
+        if (file.isFile() && file.exists()) {
+            return file.delete();
+        }
+        return false;
+    }
+
+    /**
+     * 删除文件夹以及目录下的文件
+     * @param   filePath 被删除目录的文件路径
+     * @return  目录删除成功返回true，否则返回false
+     */
+    public boolean deleteDirectory(String filePath) {
+        boolean flag = false;
+        //如果filePath不以文件分隔符结尾，自动添加文件分隔符
+        if (!filePath.endsWith(File.separator)) {
+            filePath = filePath + File.separator;
+        }
+        File dirFile = new File(filePath);
+        if (!dirFile.exists() || !dirFile.isDirectory()) {
+            return false;
+        }
+        flag = true;
+        File[] files = dirFile.listFiles();
+        //遍历删除文件夹下的所有文件(包括子目录)
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                //删除子文件
+                flag = deleteFile(files[i].getAbsolutePath());
+                if (!flag) break;
+            } else {
+                //删除子目录
+                flag = deleteDirectory(files[i].getAbsolutePath());
+                if (!flag) break;
+            }
+        }
+        if (!flag) return false;
+        //删除当前空目录
+        return dirFile.delete();
+    }
 }

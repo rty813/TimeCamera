@@ -29,13 +29,40 @@
             >
         </android.support.v4.view.ViewPager>
 
-        <android.support.design.widget.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <com.github.clans.fab.FloatingActionMenu
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_gravity="bottom|end"
-            android:layout_margin="20dp"
-            android:src="@drawable/camera"
-            android:id="@+id/fab_takepic"/>
+            android:paddingRight="20dp"
+            android:paddingBottom="10dp"
+            app:menu_backgroundColor="#a5ffffff"
+            app:menu_icon="@drawable/more1"
+            app:menu_animationDelayPerItem="20"
+            app:menu_labels_ellipsize="end"
+            android:id="@+id/fab_menu">
+            <com.github.clans.fab.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/add_mini"
+                android:id="@+id/fab_add"
+                app:fab_size="mini"
+                app:fab_label="新增"/>
+            <com.github.clans.fab.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/replace"
+                android:id="@+id/fab_replace"
+                app:fab_size="mini"
+                app:fab_label="替换"/>
+            <com.github.clans.fab.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/remove"
+                android:id="@+id/fab_remove"
+                app:fab_size="mini"
+                app:fab_label="删除"/>
+
+        </com.github.clans.fab.FloatingActionMenu>
 
         <TextView
             android:layout_width="wrap_content"

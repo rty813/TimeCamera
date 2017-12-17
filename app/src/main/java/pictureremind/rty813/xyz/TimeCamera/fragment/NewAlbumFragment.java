@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -56,6 +57,8 @@ import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;
+
+import static pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment.themeColor;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -448,8 +451,10 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
         MiStatInterface.recordPageStart(getActivity(), "NewAlbumFragment");
-        if (MainFragment.themeColor != null){
-            new AutoBackground(getActivity(), toolbar).setColor(MainFragment.themeColor).start();
+        if (themeColor != null){
+            new AutoBackground(getActivity(), toolbar).setColor(themeColor).start();
+            btn_commit.setBackgroundTintList(ColorStateList.valueOf(themeColor[0]));
+
         }
     }
 
