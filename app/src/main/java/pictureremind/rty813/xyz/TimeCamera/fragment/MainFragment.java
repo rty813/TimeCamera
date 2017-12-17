@@ -2,6 +2,8 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -20,16 +22,23 @@ import android.widget.Toast;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
 import pictureremind.rty813.xyz.TimeCamera.util.GetFilesUtils;
 import pictureremind.rty813.xyz.TimeCamera.util.RecyclerviewAdapter;
 import pictureremind.rty813.xyz.TimeCamera.R;
+import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;
 
 /**
@@ -94,21 +103,46 @@ public class MainFragment extends Fragment implements View.OnClickListener{
         for (Map<String, Object> album: albumlist){
             String albumname = (String) album.get(GetFilesUtils.FILE_INFO_NAME);
             List<Map<String, Object>> imageslist = GetFilesUtils.getInstance().getSonNode(dir + albumname);
-            Collections.reverse(imageslist);
             if (imageslist.size() > 0){
-                Map<String, String> map = new HashMap<>();
-                map.put("path", imageslist.get(0).get(GetFilesUtils.FILE_INFO_PATH).toString());
-                map.put("dirpath", dir + albumname);
-                map.put("name", albumname);
-                if (!list.contains(map)){
-                    list.add(0, new HashMap<>(map));
+                SQLiteDatabase database = ((MainActivity) getActivity()).getDbHelper().getReadableDatabase();
+                Cursor cursor = database.query(SQLiteDBHelper.TABLE_NAME, null, "NAME=?", new String[]{albumname}, null, null, null);
+                if (cursor.getCount() > 0){
+                    cursor.moveToFirst();
+                    String createTime = cursor.getString(cursor.getColumnIndex("CREATE_TIME"));
+
+                    Map<String, String> map = new HashMap<>();
+                    map.put("path", imageslist.get(imageslist.size() - 1).get(GetFilesUtils.FILE_INFO_PATH).toString());
+                    map.put("dirpath", dir + albumname);
+                    map.put("name", albumname);
+                    map.put("createTime", createTime);
+                    if (!list.contains(map)){
+                        list.add(new HashMap<>(map));
+                    }
                 }
             }
+        }
+        if (list.size() > 0){
+            Collections.sort(list, new Comparator<Map<String, String>>() {
+                @Override
+                public int compare(Map<String, String> map1, Map<String, String> map2) {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+                    try {
+                        Date date1 = dateFormat.parse(map1.get("createTime"));
+                        Date date2 = dateFormat.parse(map2.get("createTime"));
+                        return date2.compareTo(date1);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    return 0;
+                }
+            });
         }
     }
 
     public void notifyInsert(){
+//        list.removeAll(list);
         loadAlbum();
+//        adapter.notifyDataSetChanged();
         adapter.notifyItemInserted(0);
         if (list.size() > 1){
             adapter.notifyItemRangeChanged(1, list.size() - 1);
