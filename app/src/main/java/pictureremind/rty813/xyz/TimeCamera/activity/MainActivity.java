@@ -1,5 +1,6 @@
 package pictureremind.rty813.xyz.TimeCamera.activity;
 
+import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.SensorManager;
@@ -18,8 +19,15 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
+
+import java.util.List;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment;
@@ -61,9 +69,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         windowManager.getDefaultDisplay().getMetrics(metrics);
         width = metrics.widthPixels;
         height = metrics.heightPixels;
-        if(ContextCompat.checkSelfPermission(this, "android.permission.WRITE_EXTERNAL_STORAGE") != 0) {
-            ActivityCompat.requestPermissions(this, new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, 0);
-        }
+        checkPermission();
         System.out.println(width + " " + height);
         if (null == savedInstanceState) {
             if (null == mainFragment) {
@@ -85,6 +91,27 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         if (orientationEventListener.canDetectOrientation()) {
             orientationEventListener.enable();
         }
+    }
+
+    private void checkPermission() {
+        Dexter.withActivity(this)
+                .withPermissions(
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ).withListener(new MultiplePermissionsListener() {
+            @Override
+            public void onPermissionsChecked(MultiplePermissionsReport report) {
+                if (!report.areAllPermissionsGranted()){
+                    Toast.makeText(MainActivity.this, "您必须同意这些权限！", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+
+            @Override
+            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+                token.continuePermissionRequest();
+            }
+        }).check();
     }
 
     public int getRotate() {
