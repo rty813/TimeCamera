@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -76,9 +77,10 @@ public class MainFragment extends Fragment implements View.OnClickListener{
                 mItemClickListener.onItemClick(view, position);
             }
         });
-        loadAlbum();
+        if(ContextCompat.checkSelfPermission(getActivity(), "android.permission.WRITE_EXTERNAL_STORAGE") == 0) {
+            loadAlbum();
+        }
         recyclerView.setAdapter(adapter);
-
     }
 
     private void loadAlbum(){
