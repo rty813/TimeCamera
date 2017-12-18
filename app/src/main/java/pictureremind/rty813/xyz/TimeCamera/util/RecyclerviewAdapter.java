@@ -2,6 +2,7 @@ package pictureremind.rty813.xyz.TimeCamera.util;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -21,6 +22,7 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -79,12 +81,23 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter {
         BitmapFactory.decodeFile(filepath, options);
 
         int width = viewHolder.getWidth();
-        int height = (int)(width * ((float)options.outHeight / options.outWidth));
+        float prop = (float)options.outHeight / options.outWidth;
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(filepath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int orientation = Integer.parseInt(exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+        boolean needRotate = orientation == ExifInterface.ORIENTATION_UNDEFINED? (prop < 1):
+                orientation == ExifInterface.ORIENTATION_ROTATE_180;
+        float ratio = prop < 1? 1 / prop : prop;
+        int height = (int) (needRotate? width / ratio: width * ratio);
 
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) ll_root.getLayoutParams();
         layoutParams.height = height;
         ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(filepath)))
-                .setResizeOptions(new ResizeOptions(width, height))
+                .setResizeOptions(new ResizeOptions(width, (int) (width * prop)))
                 .build();
 
         AbstractDraweeController controller = Fresco.newDraweeControllerBuilder()

@@ -1,16 +1,28 @@
 package pictureremind.rty813.xyz.TimeCamera.activity;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.SensorManager;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import android.os.Environment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
@@ -18,7 +30,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.coolerfall.daemon.Daemon;
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.common.RotationOptions;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -27,14 +44,21 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
+import pictureremind.rty813.xyz.TimeCamera.NotifyService;
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.CameraFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment;
 import pictureremind.rty813.xyz.TimeCamera.fragment.NewAlbumFragment;
 import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
+
+import static pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment.CHANGE;
+import static pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment.CHANGEALL;
+import static pictureremind.rty813.xyz.TimeCamera.fragment.BrowseFragment.DELETE;
 
 public class MainActivity extends AppCompatActivity implements MainFragment.onBtnClickListener,
         NewAlbumFragment.onBtnClickListener, MainFragment.onItemClickListener, CameraFragment.onCaptureSucceed{
@@ -53,6 +77,9 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
     private static final String CHANNEL = "SELF";
 
     private SQLiteDBHelper dbHelper;
+    public static String ROOTPATH;
+    private String createtime = null;
+    public static float alpha = 0.3f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,12 +90,16 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         MiStatInterface.enableExceptionCatcher(true);
         URLStatsRecorder.enableAutoRecord();
         dbHelper = new SQLiteDBHelper(this);
+        ROOTPATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Pictures/TimeCamera/";
         Fresco.initialize(this);
         WindowManager windowManager = getWindowManager();
         DisplayMetrics metrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getMetrics(metrics);
         width = metrics.widthPixels;
         height = metrics.heightPixels;
+        SharedPreferences sharedPreferences = getSharedPreferences("TimeCamera", MODE_PRIVATE);
+        alpha = sharedPreferences.getFloat("alpha", 0.3f);
+
         checkPermission();
         System.out.println(width + " " + height);
         if (null == savedInstanceState) {
@@ -90,6 +121,12 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         };
         if (orientationEventListener.canDetectOrientation()) {
             orientationEventListener.enable();
+        }
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0,
+                new Intent(this, NotifyService.class), 0);
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (null != manager){
+            manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60000, pendingIntent);
         }
     }
 
@@ -149,7 +186,13 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
             case R.id.btn_commit:
                 Toast.makeText(this, "保存成功！", Toast.LENGTH_SHORT).show();
                 getSupportFragmentManager().popBackStack();
-                mainFragment.notifyInsert();
+                if ((createtime != null && !createtime.equals(MainFragment.DEFAULT_TIME))
+                        || (createtime == null)){
+                    mainFragment.notifyInsert();
+                }
+                else if (createtime != null){
+                    mainFragment.notifyChange(CHANGEALL);
+                }
                 break;
         }
     }
@@ -166,21 +209,49 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
 
     @Override
     public void onItemClick(View viewItem, int position) {
-        String filepath = mainFragment.getList().get(position).get("dirpath");
-        String albumname = mainFragment.getList().get(position).get("name");
-        browseFragment = BrowseFragment.newInstance(filepath, albumname);
-        browseFragment.setmOnChangedListener(new BrowseFragment.onChanged() {
-            @Override
-            public void onChanged(int type) {
-                mainFragment.notifyChange(type);
-            }
-        });
-        getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
-                .hide(mainFragment)
-                .add(R.id.container, browseFragment)
-                .addToBackStack("browseFragment")
-                .commit();
+        final String filepath = mainFragment.getList().get(position).get("dirpath");
+        final String albumname = mainFragment.getList().get(position).get("name");
+        createtime = mainFragment.getList().get(position).get("createTime");
+        if (createtime.equals(MainFragment.DEFAULT_TIME)){
+            new AlertDialog.Builder(this).setTitle("提示")
+                    .setMessage("尚未设置该相册信息！\n请选择操作")
+                    .setPositiveButton("设置", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            newAlbumFragment = NewAlbumFragment.newInstance(albumname, null);
+                            getSupportFragmentManager().beginTransaction()
+                                    .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
+                                    .hide(mainFragment)
+                                    .add(R.id.container, newAlbumFragment)
+                                    .addToBackStack("newAlbumFragment")
+                                    .commit();
+                        }
+                    })
+                    .setNegativeButton("取消", null)
+                    .setNeutralButton("删除", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            BrowseFragment.deleteDirectory(filepath);
+                            mainFragment.notifyChange(DELETE);
+                        }
+                    })
+                    .show();
+        }
+        else{
+            browseFragment = BrowseFragment.newInstance(filepath, albumname);
+            browseFragment.setmOnChangedListener(new BrowseFragment.onChanged() {
+                @Override
+                public void onChanged(int type) {
+                    mainFragment.notifyChange(type);
+                }
+            });
+            getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
+                    .hide(mainFragment)
+                    .add(R.id.container, browseFragment)
+                    .addToBackStack("browseFragment")
+                    .commit();
+        }
     }
 
     @Override
@@ -199,23 +270,37 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
             BitmapFactory.decodeFile(filepath, options);
             int width = newAlbumFragment.insert_container.getWidth();
             float prop = (float)options.outHeight / options.outWidth;
-            height = (int)(width * prop);
-
+            ExifInterface exif = null;
+            try {
+                exif = new ExifInterface(filepath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            int orientation = Integer.parseInt(exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+            boolean needRotate = orientation == ExifInterface.ORIENTATION_UNDEFINED? (prop < 1):
+                    orientation == ExifInterface.ORIENTATION_ROTATE_180;
+            float ratio = prop < 1? 1 / prop : prop;
+            int height = (int) (needRotate? width / ratio: width * ratio);
 //            调整容器高度
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) newAlbumFragment.insert_container.getLayoutParams();
             params.height = height;
             newAlbumFragment.insert_container.setLayoutParams(params);
 
-//            压缩图片
-            int outWidth = options.outWidth;
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = (int)((float)outWidth / width);
-            final Bitmap bitmap = BitmapFactory.decodeFile(filepath, options);
-            newAlbumFragment.iv_preview.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            final ImageRequest request;
+            request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(filepath)))
+                    .setResizeOptions(new ResizeOptions(width, (int) (width * prop)))
+                    .build();
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    newAlbumFragment.iv_preview.setImageBitmap(bitmap);
+                    newAlbumFragment.iv_preview.setController(
+                            Fresco.newDraweeControllerBuilder()
+                                    .setImageRequest(request)
+                                    .build()
+                    );
+//                    newAlbumFragment.iv_preview.setImageBitmap(bitmap);
+
                 }
             });
             newAlbumFragment.isTookPic = true;
@@ -226,4 +311,5 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
             getSupportFragmentManager().popBackStack();
         }
     }
+
 }

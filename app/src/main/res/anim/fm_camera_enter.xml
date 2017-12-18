@@ -4,19 +4,6 @@
     android:interpolator="@android:anim/decelerate_interpolator"
     android:duration="300" >
     <translate
-        android:fromXDelta="100%p" android:toXDelta="0%p"
+        android:fromXDelta="100%p" android:toXDelta="-1%p"
         android:fromYDelta="0%p" android:toYDelta="0%p" />
-    <!--<scale-->
-        <!--android:fromYScale="0%"-->
-        <!--android:toYScale="100%"-->
-        <!--android:fromXScale="0%"-->
-        <!--android:toXScale="100%"-->
-        <!--android:pivotY="50%"-->
-        <!--android:pivotX="50%"-->
-        <!--/>-->
-    <!--<alpha-->
-        <!--android:fromAlpha="0.1"-->
-        <!--android:toAlpha="1.0"-->
-        <!--/>-->
-
 </set>

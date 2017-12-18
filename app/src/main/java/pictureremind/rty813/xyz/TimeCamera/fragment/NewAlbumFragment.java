@@ -1,6 +1,5 @@
 package pictureremind.rty813.xyz.TimeCamera.fragment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,9 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -31,12 +28,11 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.xiaomi.mistatistic.sdk.MiStatInterface;
 
@@ -46,11 +42,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Date;
+import java.util.Locale;
 
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import pictureremind.rty813.xyz.TimeCamera.R;
@@ -75,16 +70,15 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private String albumname;
     private String mParam2;
     private String str_cyc = "每周";
 
     private onBtnClickListener mListener;
     private MaterialEditText et_albumname;
     private NestedScrollView nsv_root;
-    public ImageView iv_preview;
+    public SimpleDraweeView iv_preview;
     public FrameLayout insert_container;
-    private String albumname;
     private FloatingActionButton btn_commit;
     private TextView tv_picktime;
     public boolean isTookPic = false;
@@ -99,15 +93,15 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
+     * @param albumname Parameter 1.
      * @param param2 Parameter 2.
      * @return A new instance of fragment NewAlbumFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static NewAlbumFragment newInstance(String param1, String param2) {
+    public static NewAlbumFragment newInstance(String albumname, String param2) {
         NewAlbumFragment fragment = new NewAlbumFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM1, albumname);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
@@ -117,7 +111,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            albumname = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
@@ -142,7 +136,12 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         toolbar = view.findViewById(R.id.toolbar);
         final LinearLayout ll_choosetime = view.findViewById(R.id.ll_choosetime);
 
-        et_albumname.validate("\\d+", "Only Integer Valid!");
+        if (albumname != null){
+            insert_container.setVisibility(View.GONE);
+            et_albumname.setText(albumname);
+            et_albumname.setEnabled(false);
+        }
+
         et_albumname.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -185,12 +184,13 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 tv_picktime.setText("");
                 String[] cycs = getResources().getStringArray(R.array.cyc);
                 str_cyc = cycs[i];
-                if (str_cyc.equals("每小时")){
+                if (str_cyc.equals("不设置")){
                     ll_choosetime.setVisibility(View.GONE);
                 }
                 else{
                     ll_choosetime.setVisibility(View.VISIBLE);
                 }
+                checkCommit();
             }
 
             @Override
@@ -226,7 +226,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                 mListener.onClick(view);
                 break;
             case R.id.btn_picktime:
-                Toast.makeText(getActivity(), str_cyc, Toast.LENGTH_SHORT).show();
                 View numberpicker = null;
                 Time t=new Time();
                 t.setToNow();
@@ -244,8 +243,8 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String string = np_week_week.getContentByCurrValue() + "/"
-                                        + np_hour_week.getContentByCurrValue() + "/" + np_minute_week.getContentByCurrValue();
+                                String string = np_week_week.getContentByCurrValue() + "-"
+                                        + np_hour_week.getContentByCurrValue() + "-" + np_minute_week.getContentByCurrValue();
                                 tv_picktime.setText(string);
                             }
                         });
@@ -259,8 +258,8 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String string = np_day_month.getContentByCurrValue() + "/" +
-                                        np_hour_month.getContentByCurrValue() + "/" + np_minute_month.getContentByCurrValue();
+                                String string = np_day_month.getContentByCurrValue() + "-" +
+                                        np_hour_month.getContentByCurrValue() + "-" + np_minute_month.getContentByCurrValue();
                                 tv_picktime.setText(string);
                             }
                         });
@@ -293,8 +292,8 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String string = np_month_year.getContentByCurrValue() + "/" + np_day_year.getContentByCurrValue()
-                                        + "/" + np_hour_year.getContentByCurrValue() + "/" + np_minute_year.getContentByCurrValue();
+                                String string = np_month_year.getContentByCurrValue() + "-" + np_day_year.getContentByCurrValue()
+                                        + "-" + np_hour_year.getContentByCurrValue() + "-" + np_minute_year.getContentByCurrValue();
                                 tv_picktime.setText(string);
                             }
                         });
@@ -307,13 +306,12 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String string = np_hour_day.getContentByCurrValue() + "/" + np_minute_day.getContentByCurrValue();
+                                String string = np_hour_day.getContentByCurrValue() + "-" + np_minute_day.getContentByCurrValue();
                                 tv_picktime.setText(string);
                             }
                         });
                         break;
-                    case "每小时":
-
+                    default:
                         break;
                 }
                 if (numberpicker.findViewById(R.id.np_hour) != null){
@@ -346,7 +344,6 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
 
                 break;
             case R.id.btn_commit:
-//                Toast.makeText(getActivity(), "Commit!!!!", Toast.LENGTH_SHORT).show();
                 String albumname = et_albumname.getText().toString();
                 SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getReadableDatabase();
                 Cursor cursor = database.query(SQLiteDBHelper.TABLE_NAME, null, "NAME=?", new String[]{albumname}, null, null, null);
@@ -355,43 +352,45 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
                     return;
                 }
                 database.close();
-
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
-                String date = dateFormat.format(System.currentTimeMillis());
-                String dir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/TimeCamera/" + albumname + "/" + date + ".jpg";
-                if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-                    Snackbar.make(btn_commit, "保存失败！", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-                try {
-                    int bytesum = 0;
-                    int byteread = 0;
-                    File oldfile = new File(filepath);
-                    if (oldfile.exists()){
-                        InputStream inputStream = new FileInputStream(oldfile);
-                        (new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/TimeCamera/" + albumname)).mkdirs();
-                        new File(dir).createNewFile();
-                        FileOutputStream outputStream = new FileOutputStream(dir);
-                        byte[] buffer = new byte[1444];
-                        int length;
-                        while((byteread = inputStream.read(buffer)) != -1){
-                            bytesum += byteread;
-                            System.out.println(bytesum);
-                            outputStream.write(buffer, 0, byteread);
-                        }
-                        inputStream.close();
+                if (this.albumname == null){
+                    String date = dateFormat.format(System.currentTimeMillis());
+                    String dir = MainActivity.ROOTPATH + albumname + "/" + date + ".jpg";
+                    if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+                        Snackbar.make(btn_commit, "保存失败！", Snackbar.LENGTH_SHORT).show();
+                        return;
                     }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    Snackbar.make(btn_commit, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
-                    e.printStackTrace();
+                    try {
+                        int bytesum = 0;
+                        int byteread = 0;
+                        File oldfile = new File(filepath);
+                        if (oldfile.exists()){
+                            InputStream inputStream = new FileInputStream(oldfile);
+                            (new File(MainActivity.ROOTPATH + albumname)).mkdirs();
+                            new File(dir).createNewFile();
+                            FileOutputStream outputStream = new FileOutputStream(dir);
+                            byte[] buffer = new byte[1444];
+                            while((byteread = inputStream.read(buffer)) != -1){
+                                bytesum += byteread;
+                                System.out.println(bytesum);
+                                outputStream.write(buffer, 0, byteread);
+                            }
+                            inputStream.close();
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        Snackbar.make(btn_commit, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
                 }
+
                 ContentValues values = new ContentValues();
                 values.put("NAME", albumname);
                 values.put("CYC", str_cyc);
                 values.put("REMIND_TIME", tv_picktime.getText().toString());
                 values.put("CREATE_TIME", dateFormat.format(new Date(System.currentTimeMillis())));
+                values.put("LAST_TIME", dateFormat.format(new Date(System.currentTimeMillis())));
                 database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
                 database.insert(SQLiteDBHelper.TABLE_NAME, null, values);
                 database.close();
@@ -405,8 +404,10 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
     }
 
     public void checkCommit(){
-        if (et_albumname.getText().toString().equals("") || !isTookPic
-                || tv_picktime.getText().toString().equals("")){
+        if ((albumname == null
+                && (et_albumname.getText().toString().equals("") || !isTookPic || (tv_picktime.getText().toString().equals("") && !str_cyc.equals("不设置"))))
+        || ((albumname != null)
+                && (tv_picktime.getText().toString().equals("")))){
             System.out.println("dismiss");
             if (btn_commit.getVisibility() == View.VISIBLE){
                 Animation animation = AnimationUtils.loadAnimation(getActivity(),R.anim.fm_pop_exit);

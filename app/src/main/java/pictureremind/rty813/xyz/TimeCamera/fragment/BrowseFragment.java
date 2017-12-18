@@ -2,7 +2,9 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Environment;
@@ -69,6 +71,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     private onChanged mOnChangedListener;
     public static final int DELETE = 1;
     public static final int CHANGE = 0;
+    public static final int CHANGEALL = 2;
     private FloatingActionButton fab_add;
     private FloatingActionButton fab_remove;
     private FloatingActionButton fab_replace;
@@ -265,6 +268,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
                                 database.delete(SQLiteDBHelper.TABLE_NAME, "NAME=?", new String[]{name});
+                                database.close();
                                 deleteDirectory(path);
                                 mOnChangedListener.onChanged(DELETE);
                                 getActivity().onBackPressed();
@@ -322,7 +326,11 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                             Snackbar.make(viewpager, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
-
+                        SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
+                        ContentValues values = new ContentValues();
+                        values.put("LAST_TIME", date);
+                        database.update(SQLiteDBHelper.TABLE_NAME, values, "NAME=?", new String[]{name});
+                        database.close();
                         list.add(0, dir);
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
@@ -367,7 +375,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
      * @param   filePath    被删除文件的文件名
      * @return 文件删除成功返回true，否则返回false
      */
-    public boolean deleteFile(String filePath) {
+    public static boolean deleteFile(String filePath) {
         File file = new File(filePath);
         if (file.isFile() && file.exists()) {
             return file.delete();
@@ -380,7 +388,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
      * @param   filePath 被删除目录的文件路径
      * @return  目录删除成功返回true，否则返回false
      */
-    public boolean deleteDirectory(String filePath) {
+    public static boolean deleteDirectory(String filePath) {
         boolean flag = false;
         //如果filePath不以文件分隔符结尾，自动添加文件分隔符
         if (!filePath.endsWith(File.separator)) {

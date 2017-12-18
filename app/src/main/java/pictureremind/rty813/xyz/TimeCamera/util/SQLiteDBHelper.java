@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class SQLiteDBHelper extends SQLiteOpenHelper {
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 4;
     private static final String DB_NAME = "IMAGES";
     public static final String TABLE_NAME = "IMAGES";
 
@@ -21,7 +21,7 @@ public class SQLiteDBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +
                 " (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME VARCHAR(30) UNIQUE, CYC VARCHAR(10), " +
-                "CREATE_TIME VARCHAR(40), REMIND_TIME VARCHAR(10))";
+                "CREATE_TIME VARCHAR(40), REMIND_TIME VARCHAR(40), LAST_TIME VARCHAR(40), HAS_REMIND INTEGER DEFAULT 0)";
         sqLiteDatabase.execSQL(sql);
     }
 

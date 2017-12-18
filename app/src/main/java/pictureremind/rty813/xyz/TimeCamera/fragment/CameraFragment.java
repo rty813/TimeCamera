@@ -29,6 +29,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ExifInterface;
 import android.media.Image;
 import android.media.ImageReader;
 import android.net.Uri;
@@ -520,14 +521,18 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     public void setUserVisibleHint(boolean isVisibleToUser) {
         if (isVisibleToUser){
             if (mBackgroundThread == null && hasUiPrepared){
-               init();
+                try {
+                    init();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             hasInit = hasUiPrepared;
         }
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    private void init() {
+    private void init() throws IOException {
         if (simpleDraweeView.getWidth() == 0){
             hasInit = false;
             return;
@@ -547,8 +552,13 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             BitmapFactory.decodeFile(coverPath, options);
             int width = simpleDraweeView.getWidth();
             float ratio = (float)options.outHeight / options.outWidth;
+
+            ExifInterface exif = new ExifInterface(coverPath);
+            int orientation = Integer.parseInt(exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+            boolean needRotate = orientation == ExifInterface.ORIENTATION_UNDEFINED? (ratio < 1):
+                    orientation == ExifInterface.ORIENTATION_ROTATE_180;
             ImageRequest request;
-            if (options.outWidth > options.outHeight){
+            if (needRotate){
                 request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(coverPath)))
                         .setResizeOptions(new ResizeOptions((int) (width / ratio), width))
                         .setRotationOptions(RotationOptions.forceRotation(RotationOptions.ROTATE_90))
@@ -562,7 +572,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
 
             simpleDraweeView.setController(Fresco.newDraweeControllerBuilder()
                     .setImageRequest(request).build());
-            simpleDraweeView.setAlpha(0.3f);
+            simpleDraweeView.setAlpha(MainActivity.alpha);
         }
     }
 
@@ -575,7 +585,11 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             btn_capture.setBackgroundTintList(ColorStateList.valueOf(MainFragment.themeColor[0]));
         }
         if (!hasInit){
-            init();
+            try {
+                init();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -975,7 +989,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    showToast("Saved: " + mFile);
                     Log.d(TAG, mFile.toString());
                     unlockFocus();
                     mSucceed.onSucceed(mFile.getAbsolutePath());

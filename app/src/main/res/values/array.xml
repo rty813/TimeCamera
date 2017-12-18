@@ -5,6 +5,6 @@
         <item>每天</item>
         <item>每月</item>
         <item>每年</item>
-        <item>每小时</item>
+        <item>不设置</item>
     </string-array>
 </resources>

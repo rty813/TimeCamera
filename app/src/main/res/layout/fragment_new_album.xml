@@ -48,6 +48,7 @@
                 android:hint="相册名称"
                 app:met_floatingLabelText="相册名称"
                 app:met_maxCharacters="10"
+                app:met_singleLineEllipsis="true"
                 android:id="@+id/et_albumname"
                 android:layout_margin="10dp"/>
 
@@ -103,13 +104,14 @@
                 android:id="@+id/insert_container"
                 android:layout_margin="10dp"
                 android:background="#76000000">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:src="@drawable/add"
+                <com.facebook.drawee.view.SimpleDraweeView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:id="@+id/iv_preview"
-                    android:scaleType="centerInside"/>
+                    android:layout_gravity="center"
+                    app:placeholderImage="@drawable/add"
+                    app:actualImageScaleType="centerInside"
+                    />
             </FrameLayout>
 
             <View
