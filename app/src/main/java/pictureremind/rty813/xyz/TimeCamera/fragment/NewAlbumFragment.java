@@ -181,9 +181,9 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         ((Spinner)view.findViewById(R.id.spinner_cyc)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                tv_picktime.setText("");
                 String[] cycs = getResources().getStringArray(R.array.cyc);
                 str_cyc = cycs[i];
+                tv_picktime.setText("");
                 if (str_cyc.equals("不设置")){
                     ll_choosetime.setVisibility(View.GONE);
                 }

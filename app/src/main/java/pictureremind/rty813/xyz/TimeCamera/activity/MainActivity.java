@@ -31,9 +31,13 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.coolerfall.daemon.Daemon;
+import com.facebook.cache.common.SimpleCacheKey;
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.controller.AbstractDraweeController;
+import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.common.RotationOptions;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.karumi.dexter.Dexter;
@@ -46,6 +50,8 @@ import com.xiaomi.mistatistic.sdk.URLStatsRecorder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import pictureremind.rty813.xyz.TimeCamera.NotifyService;
@@ -80,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
     public static String ROOTPATH;
     private String createtime = null;
     public static float alpha = 0.3f;
+    private ImageRequest request;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -286,23 +293,28 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
             params.height = height;
             newAlbumFragment.insert_container.setLayoutParams(params);
 
-            final ImageRequest request;
-            request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(filepath)))
-                    .setResizeOptions(new ResizeOptions(width, (int) (width * prop)))
+            Uri uri = Uri.fromFile(new File(filepath));
+            Fresco.getImagePipeline().evictFromMemoryCache(uri);
+            Fresco.getImagePipelineFactory().getMainBufferedDiskCache().remove(new SimpleCacheKey(uri.toString()));
+            Fresco.getImagePipelineFactory().getSmallImageFileCache().remove(new SimpleCacheKey(uri.toString()));
+            request = ImageRequestBuilder.newBuilderWithSource(uri)
+                    .setResizeOptions(new ResizeOptions(width * 2, (int) (width * prop)))
                     .build();
 
-            runOnUiThread(new Runnable() {
+            newAlbumFragment.iv_preview.post(new Runnable() {
                 @Override
                 public void run() {
-                    newAlbumFragment.iv_preview.setController(
-                            Fresco.newDraweeControllerBuilder()
-                                    .setImageRequest(request)
-                                    .build()
-                    );
-//                    newAlbumFragment.iv_preview.setImageBitmap(bitmap);
-
+                    long hashcode = newAlbumFragment.iv_preview.getController() == null ?
+                            0: newAlbumFragment.iv_preview.getController().hashCode();
+                    DraweeController controller = Fresco.newDraweeControllerBuilder()
+                            .setImageRequest(request)
+                            .setOldController(newAlbumFragment.iv_preview.getController())
+                            .build();
+                    System.out.println(controller.hashCode() == hashcode);
+                    newAlbumFragment.iv_preview.setController(controller);
                 }
             });
+
             newAlbumFragment.isTookPic = true;
             newAlbumFragment.filepath = filepath;
             newAlbumFragment.checkCommit();

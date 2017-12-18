@@ -4,8 +4,11 @@ package pictureremind.rty813.xyz.TimeCamera.fragment;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -18,6 +21,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,7 +29,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.widget.PopupWindow;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -48,6 +55,7 @@ import pictureremind.rty813.xyz.TimeCamera.util.GetFilesUtils;
 import pictureremind.rty813.xyz.TimeCamera.util.SQLiteDBHelper;
 import pictureremind.rty813.xyz.autobackground.AutoBackground;
 
+import static android.content.Context.MODE_PRIVATE;
 import static pictureremind.rty813.xyz.TimeCamera.fragment.MainFragment.themeColor;
 
 /**
@@ -78,6 +86,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     private FloatingActionMenu fab_menu;
     private boolean isCancel;
     private TextView tv_imageNumHint;
+    private CameraFragment cameraFragment;
 
     public BrowseFragment() {
         // Required empty public constructor
@@ -278,6 +287,36 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                         .show();
                 break;
             case R.id.menu_alpha:
+                View popupView = View.inflate(getActivity(), R.layout.popupwindow_alpha, null);
+                final PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT, false);
+                SeekBar seekBar = popupView.findViewById(R.id.seekbar);
+                popupWindow.setOutsideTouchable(true);
+                popupWindow.setAnimationStyle(R.style.dismiss_anim);
+                popupWindow.update();
+                seekBar.setProgress((int) (MainActivity.alpha * 100));
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        cameraFragment.setAlpha((float)i / 100);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        MainActivity.alpha = (float)seekBar.getProgress() / 100;
+                        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TimeCamera", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putFloat("alpha", MainActivity.alpha);
+                        editor.apply();
+                        popupWindow.dismiss();
+                    }
+                });
+                popupWindow.showAtLocation(viewpager, Gravity.CENTER, 0, 0);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -292,7 +331,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         public Fragment getItem(int position) {
             if (position == 0) {
                 String str = list.size() == 0? null : list.get(0);
-                CameraFragment cameraFragment = CameraFragment.newInstance(str);
+                cameraFragment = CameraFragment.newInstance(str);
                 cameraFragment.setmSucceed(new CameraFragment.onCaptureSucceed() {
                     @Override
                     public void onSucceed(String filepath) {

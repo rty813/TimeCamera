@@ -1213,4 +1213,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         super.onDetach();
         mSucceed = null;
     }
+
+    public void setAlpha(float alpha){
+        simpleDraweeView.setAlpha(alpha);
+    }
 }
