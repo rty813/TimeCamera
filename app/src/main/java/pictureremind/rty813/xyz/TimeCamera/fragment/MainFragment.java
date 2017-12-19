@@ -153,9 +153,13 @@ public class MainFragment extends Fragment implements View.OnClickListener{
             String albumname = (String) album.get(GetFilesUtils.FILE_INFO_NAME);
             List<Map<String, Object>> imageslist = GetFilesUtils.getInstance().getSonNode(ROOTPATH + albumname);
             if (imageslist.size() > 0){
+                String path = Collections.max(imageslist, (map1, map2) -> map1.get(GetFilesUtils.FILE_INFO_PATH).toString().compareTo(
+                        map2.get(GetFilesUtils.FILE_INFO_PATH).toString()
+                )).get(GetFilesUtils.FILE_INFO_PATH).toString();
+
                 nameList.add(albumname);
                 Map<String, String> map = new HashMap<>();
-                map.put("path", imageslist.get(imageslist.size() - 1).get(GetFilesUtils.FILE_INFO_PATH).toString());
+                map.put("path", path);
                 map.put("dirpath", ROOTPATH + albumname);
                 map.put("name", albumname);
                 cursor = database.query(SQLiteDBHelper.TABLE_NAME, null, "NAME=?", new String[]{albumname}, null, null, null);

@@ -45,6 +45,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -146,8 +148,10 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
 
         List<Map<String, Object>> imageslist = GetFilesUtils.getInstance().getSonNode(path);
         for (Map<String, Object> image : imageslist) {
-            list.add(0, image.get(GetFilesUtils.FILE_INFO_PATH).toString());
+            list.add(image.get(GetFilesUtils.FILE_INFO_PATH).toString());
         }
+        Collections.sort(list);
+        Collections.reverse(list);
 
         tv_imageNumHint = view.findViewById(R.id.tv_imageNumHint);
         tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", 1, list.size()));
@@ -178,12 +182,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             public void onPageScrollStateChanged(int state) {
             }
         });
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                fab_menu.showMenuButton(true);
-            }
-        }, 200);
+        new Handler().postDelayed(() -> fab_menu.showMenuButton(true), 200);
         fab_replace.setOnClickListener(this);
         fab_remove.setOnClickListener(this);
         fab_add.setOnClickListener(this);
@@ -227,14 +226,11 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
 
                 isCancel = false;
                 Snackbar.make(fab_menu, "删除记录", Snackbar.LENGTH_SHORT)
-                        .setAction("撤销", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                isCancel = true;
-                                list.add(pos, filepath);
-                                adapter.notifyDataSetChanged();
-                                tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
-                            }
+                        .setAction("撤销", v -> {
+                            isCancel = true;
+                            list.add(pos, filepath);
+                            adapter.notifyDataSetChanged();
+                            tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
                         })
                         .addCallback(new MyCallBack(filepath))
                         .show();
@@ -272,16 +268,13 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setTitle("警告")
                         .setMessage("真的要删除本相册吗？\n数据删除不可恢复！")
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
-                                database.delete(SQLiteDBHelper.TABLE_NAME, "NAME=?", new String[]{name});
-                                database.close();
-                                deleteDirectory(path);
-                                mOnChangedListener.onChanged(DELETE);
-                                getActivity().onBackPressed();
-                            }
+                        .setPositiveButton("确定", (dialogInterface, i) -> {
+                            SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
+                            database.delete(SQLiteDBHelper.TABLE_NAME, "NAME=?", new String[]{name});
+                            database.close();
+                            deleteDirectory(path);
+                            mOnChangedListener.onChanged(DELETE);
+                            getActivity().onBackPressed();
                         })
                         .setNegativeButton("取消", null)
                         .show();
@@ -332,55 +325,49 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             if (position == 0) {
                 String str = list.size() == 0? null : list.get(0);
                 cameraFragment = CameraFragment.newInstance(str);
-                cameraFragment.setmSucceed(new CameraFragment.onCaptureSucceed() {
-                    @Override
-                    public void onSucceed(String filepath) {
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
-                        String date = dateFormat.format(System.currentTimeMillis());
-                        String dir = path + "/" + date + ".jpg";
-                        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-                            Snackbar.make(viewpager, "保存失败！", Snackbar.LENGTH_SHORT).show();
-                            return;
-                        }
-                        try {
-                            int bytesum = 0;
-                            int byteread = 0;
-                            File oldfile = new File(filepath);
-                            if (oldfile.exists()){
-                                InputStream inputStream = new FileInputStream(oldfile);
-                                new File(path).mkdirs();
-                                new File(dir).createNewFile();
-                                FileOutputStream outputStream = new FileOutputStream(dir);
-                                byte[] buffer = new byte[1444];
-                                while((byteread = inputStream.read(buffer)) != -1){
-                                    bytesum += byteread;
-                                    System.out.println(bytesum);
-                                    outputStream.write(buffer, 0, byteread);
-                                }
-                                inputStream.close();
+                cameraFragment.setmSucceed(filepath -> {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+                    String date = dateFormat.format(System.currentTimeMillis());
+                    String dir = path + "/" + date + ".jpg";
+                    if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+                        Snackbar.make(viewpager, "保存失败！", Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+                    try {
+                        int bytesum = 0;
+                        int byteread = 0;
+                        File oldfile = new File(filepath);
+                        if (oldfile.exists()){
+                            InputStream inputStream = new FileInputStream(oldfile);
+                            new File(path).mkdirs();
+                            new File(dir).createNewFile();
+                            FileOutputStream outputStream = new FileOutputStream(dir);
+                            byte[] buffer = new byte[1444];
+                            while((byteread = inputStream.read(buffer)) != -1){
+                                bytesum += byteread;
+                                System.out.println(bytesum);
+                                outputStream.write(buffer, 0, byteread);
                             }
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            Snackbar.make(viewpager, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
-                            e.printStackTrace();
+                            inputStream.close();
                         }
-                        SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
-                        ContentValues values = new ContentValues();
-                        values.put("LAST_TIME", date);
-                        database.update(SQLiteDBHelper.TABLE_NAME, values, "NAME=?", new String[]{name});
-                        database.close();
-                        list.add(0, dir);
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter.notifyDataSetChanged();
-                                viewpager.setCurrentItem(1);
-                            }
-                        });
-                        if (mOnChangedListener != null){
-                            mOnChangedListener.onChanged(CHANGE);
-                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        Snackbar.make(viewpager, "复制文件出错！", Snackbar.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                    SQLiteDatabase database = ((MainActivity)getActivity()).getDbHelper().getWritableDatabase();
+                    ContentValues values = new ContentValues();
+                    values.put("LAST_TIME", date);
+                    database.update(SQLiteDBHelper.TABLE_NAME, values, "NAME=?", new String[]{name});
+                    database.close();
+                    list.add(0, dir);
+                    getActivity().runOnUiThread(() -> {
+                        adapter.notifyDataSetChanged();
+                        viewpager.setCurrentItem(1);
+                    });
+                    if (mOnChangedListener != null){
+                        mOnChangedListener.onChanged(CHANGE);
                     }
                 });
                 return cameraFragment;
