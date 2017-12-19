@@ -246,12 +246,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         }
         else{
             browseFragment = BrowseFragment.newInstance(filepath, albumname);
-            browseFragment.setmOnChangedListener(new BrowseFragment.onChanged() {
-                @Override
-                public void onChanged(int type) {
-                    mainFragment.notifyChange(type);
-                }
-            });
+            browseFragment.setmOnChangedListener(type -> mainFragment.notifyChange(type));
             getSupportFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
                     .hide(mainFragment)
@@ -324,4 +319,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.onBt
         }
     }
 
+    public BrowseFragment getBrowseFragment() {
+        return browseFragment;
+    }
 }

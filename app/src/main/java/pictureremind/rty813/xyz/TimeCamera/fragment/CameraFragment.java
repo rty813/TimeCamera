@@ -529,6 +529,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
             }
             hasInit = hasUiPrepared;
         }
+        else{
+            closeCamera();
+            stopBackgroundThread();
+        }
         super.setUserVisibleHint(isVisibleToUser);
     }
 

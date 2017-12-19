@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Camera;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -43,6 +44,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +52,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Date;
 
 import pictureremind.rty813.xyz.TimeCamera.R;
 import pictureremind.rty813.xyz.TimeCamera.activity.MainActivity;
@@ -88,6 +91,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
     private FloatingActionMenu fab_menu;
     private boolean isCancel;
     private TextView tv_imageNumHint;
+    private TextView tv_detail;
     private CameraFragment cameraFragment;
 
     public BrowseFragment() {
@@ -133,6 +137,9 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         super.onViewCreated(view, savedInstanceState);
         toolbar = view.findViewById(R.id.toolbar);
         toolbar.setSubtitle(name);
+        tv_imageNumHint = view.findViewById(R.id.tv_imageNumHint);
+        tv_detail = view.findViewById(R.id.tv_detail);
+        viewpager = view.findViewById(R.id.viewpager);
         fab_add = view.findViewById(R.id.fab_add);
         fab_remove = view.findViewById(R.id.fab_remove);
         fab_replace = view.findViewById(R.id.fab_replace);
@@ -153,9 +160,9 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         Collections.sort(list);
         Collections.reverse(list);
 
-        tv_imageNumHint = view.findViewById(R.id.tv_imageNumHint);
         tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", 1, list.size()));
-        viewpager = view.findViewById(R.id.viewpager);
+        tv_detail.setText(getNameByPath(list.get(0)));
+
         adapter = new MyAdapter(fragmentManager);
         viewpager.setAdapter(adapter);
         viewpager.setCurrentItem(1);
@@ -170,12 +177,15 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                 if (position == 0){
                     fab_menu.hideMenuButton(true);
                     tv_imageNumHint.setVisibility(View.GONE);
+                    tv_detail.setVisibility(View.GONE);
                 }
                 else{
                     fab_menu.showMenuButton(true);
                     tv_imageNumHint.setVisibility(View.VISIBLE);
+                    tv_detail.setVisibility(View.VISIBLE);
+                    tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", position, list.size()));
+                    tv_detail.setText(getNameByPath(list.get(position - 1)));
                 }
-                tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", position, list.size()));
             }
 
             @Override
@@ -211,6 +221,52 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                 viewpager.setCurrentItem(0);
                 break;
             case R.id.fab_replace:
+                String imagePath = list.get(viewpager.getCurrentItem() - 1);
+                CameraFragment cameraFragment = CameraFragment.newInstance(imagePath);
+                cameraFragment.setmSucceed(filepath -> {
+                    if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+                        getActivity().runOnUiThread(()-> Snackbar.make(viewpager, "保存失败！", Snackbar.LENGTH_SHORT).show());
+                        return;
+                    }
+                    try {
+                        int bytesum = 0;
+                        int byteread = 0;
+                        File oldFile = new File(filepath);
+                        if (oldFile.exists()){
+                            InputStream inputStream = new FileInputStream(oldFile);
+                            new File(path).mkdirs();
+                            File newFile = new File(imagePath);
+                            newFile.delete();
+                            newFile.createNewFile();
+                            FileOutputStream outputStream = new FileOutputStream(newFile);
+                            byte[] buffer = new byte[1444];
+                            while((byteread = inputStream.read(buffer)) != -1){
+                                bytesum += byteread;
+                                System.out.println(bytesum);
+                                outputStream.write(buffer, 0, byteread);
+                            }
+                            inputStream.close();
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        getActivity().runOnUiThread(()-> Snackbar.make(viewpager, "复制文件出错！", Snackbar.LENGTH_SHORT).show());
+                        e.printStackTrace();
+                    }
+                    getActivity().runOnUiThread(() -> {
+                        adapter.notifyDataSetChanged();
+                    });
+                    if (mOnChangedListener != null){
+                        mOnChangedListener.onChanged(CHANGE);
+                        getActivity().onBackPressed();
+                    }
+                });
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
+                        .hide(((MainActivity)getActivity()).getBrowseFragment())
+                        .add(R.id.container, cameraFragment)
+                        .addToBackStack("cameraFragment")
+                        .commit();
                 break;
             case R.id.fab_remove:
                 if (list.size() == 1){
@@ -222,15 +278,18 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                 final String filepath = list.get(pos);
                 list.remove(pos);
                 adapter.notifyDataSetChanged();
-                tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
+                tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos+1 > list.size()? pos: pos+1, list.size()));
+                tv_detail.setText(getNameByPath(list.get(pos > list.size()-1? list.size() - 1: pos)));
 
                 isCancel = false;
                 Snackbar.make(fab_menu, "删除记录", Snackbar.LENGTH_SHORT)
                         .setAction("撤销", v -> {
                             isCancel = true;
+                            tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d",
+                                    pos+1 > list.size()? pos: pos+1, list.size() + 1));
+                            tv_detail.setText(getNameByPath(filepath));
                             list.add(pos, filepath);
                             adapter.notifyDataSetChanged();
-                            tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d", pos + 1, list.size()));
                         })
                         .addCallback(new MyCallBack(filepath))
                         .show();
@@ -314,6 +373,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
         }
         return super.onOptionsItemSelected(item);
     }
+
     private class MyAdapter extends FragmentStatePagerAdapter{
 
         public MyAdapter(FragmentManager fm) {
@@ -394,6 +454,19 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
 
     public void setmOnChangedListener(onChanged mOnChangedListener) {
         this.mOnChangedListener = mOnChangedListener;
+    }
+
+    private String getNameByPath(String path){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm", Locale.getDefault());
+        String[] strings = path.split("/");
+        try {
+            Date date = dateFormat.parse(strings[strings.length - 1].split("\\.")[0]);
+            dateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分", Locale.getDefault());
+            return dateFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return "解析失败";
     }
 
     /**
