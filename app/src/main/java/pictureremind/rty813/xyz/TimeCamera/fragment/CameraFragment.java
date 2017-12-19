@@ -480,6 +480,16 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         mTextureView = view.findViewById(R.id.texture);
         simpleDraweeView = view.findViewById(R.id.draweeView);
         hasUiPrepared = true;
+        simpleDraweeView.post(() -> {
+            System.out.println("onDraw" + simpleDraweeView.getWidth() + " " + mTextureView.getWidth());
+            if (!hasInit){
+                try {
+                    init();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override
@@ -505,12 +515,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                 //动画循环
             }
             public void onAnimationEnd(Animation animation) {
-                System.out.println("动画结束！！！！！");
-                startBackgroundThread();
-                if (mTextureView.isAvailable()) {
-                    openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-                } else {
-                    mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+                try {
+                    init();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -578,6 +586,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                     .setImageRequest(request).build());
             simpleDraweeView.setAlpha(MainActivity.alpha);
         }
+        hasInit = true;
     }
 
     @Override

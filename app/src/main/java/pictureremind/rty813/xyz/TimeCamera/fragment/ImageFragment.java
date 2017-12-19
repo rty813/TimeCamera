@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
+import com.facebook.cache.common.SimpleCacheKey;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
@@ -60,21 +61,23 @@ public class ImageFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         simpleDraweeView = view.findViewById(R.id.draweeView);
-        simpleDraweeView.post(new Runnable() {
-            @Override
-            public void run() {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                BitmapFactory.decodeFile(path, options);
-                int width = simpleDraweeView.getWidth();
-                float ratio = (float)options.outHeight / options.outWidth;
-                ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.fromFile(new File(path)))
-                        .setResizeOptions(new ResizeOptions(width, (int) (width * ratio)))
-                        .build();
+        simpleDraweeView.post(() -> {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, options);
+            int width = simpleDraweeView.getWidth();
+            float ratio = (float)options.outHeight / options.outWidth;
 
-                simpleDraweeView.setController(Fresco.newDraweeControllerBuilder()
-                        .setImageRequest(request).build());
-            }
+            Uri uri = Uri.fromFile(new File(path));
+            Fresco.getImagePipeline().evictFromMemoryCache(uri);
+            Fresco.getImagePipelineFactory().getMainBufferedDiskCache().remove(new SimpleCacheKey(uri.toString()));
+            Fresco.getImagePipelineFactory().getSmallImageFileCache().remove(new SimpleCacheKey(uri.toString()));
+            ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
+                    .setResizeOptions(new ResizeOptions(width, (int) (width * ratio)))
+                    .build();
+
+            simpleDraweeView.setController(Fresco.newDraweeControllerBuilder()
+                    .setImageRequest(request).build());
         });
     }
 

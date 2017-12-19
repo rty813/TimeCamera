@@ -175,7 +175,7 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
             @Override
             public void onPageSelected(int position) {
                 if (position == 0){
-                    fab_menu.hideMenuButton(true);
+                    fab_menu.hideMenuButton(false);
                     tv_imageNumHint.setVisibility(View.GONE);
                     tv_detail.setVisibility(View.GONE);
                 }
@@ -253,13 +253,13 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                         getActivity().runOnUiThread(()-> Snackbar.make(viewpager, "复制文件出错！", Snackbar.LENGTH_SHORT).show());
                         e.printStackTrace();
                     }
-                    getActivity().runOnUiThread(() -> {
-                        adapter.notifyDataSetChanged();
-                    });
                     if (mOnChangedListener != null){
                         mOnChangedListener.onChanged(CHANGE);
                         getActivity().onBackPressed();
                     }
+                    getActivity().runOnUiThread(() -> {
+                        adapter.notifyDataSetChanged();
+                    });
                 });
                 getActivity().getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fm_camera_enter, R.anim.fm_camera_exit, R.anim.fm_pop_enter, R.anim.fm_pop_exit)
@@ -287,7 +287,9 @@ public class BrowseFragment extends Fragment implements View.OnClickListener{
                             isCancel = true;
                             tv_imageNumHint.setText(String.format(Locale.getDefault(), "%d/%d",
                                     pos+1 > list.size()? pos: pos+1, list.size() + 1));
-                            tv_detail.setText(getNameByPath(filepath));
+                            if (pos != list.size()){
+                                tv_detail.setText(getNameByPath(filepath));
+                            }
                             list.add(pos, filepath);
                             adapter.notifyDataSetChanged();
                         })
