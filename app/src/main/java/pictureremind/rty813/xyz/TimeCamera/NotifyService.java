@@ -76,7 +76,12 @@ public class NotifyService extends Service {
                     boolean hasRemind = cursor.getInt(cursor.getColumnIndex("HAS_REMIND")) == 1;
                     String albumname = cursor.getString(cursor.getColumnIndex("NAME"));
 
-                    if (!hasRemind && nowDate.after(date)){
+                    if (nowDate.before(date)){
+                        ContentValues values = new ContentValues();
+                        values.put("HAS_REMIND", 0);
+                        database.update(SQLiteDBHelper.TABLE_NAME, values, "NAME=?", new String[]{albumname});
+                    }
+                    else if (!hasRemind){
                         sendNotification(albumname, count);
                         count += 1;
                         ContentValues values = new ContentValues();
