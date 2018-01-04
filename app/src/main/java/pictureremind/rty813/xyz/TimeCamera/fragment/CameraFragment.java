@@ -391,7 +391,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private String coverPath = null;
     private SimpleDraweeView simpleDraweeView;
     private boolean hasUiPrepared = false;
-    private boolean hasInit = true;
+    private boolean hasInit = false;
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -401,12 +401,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
     private void showToast(final String text) {
         final Activity activity = getActivity();
         if (activity != null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity, text, Toast.LENGTH_SHORT).show();
-                }
-            });
+            activity.runOnUiThread(() -> Toast.makeText(activity, text, Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -501,59 +496,65 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
     }
 
-    @Override
-    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
-        if (nextAnim == 0){
-            return null;
-        }
-        Animation anim = AnimationUtils.loadAnimation(getActivity(), nextAnim);
-        anim.setAnimationListener(new Animation.AnimationListener() {
-            public void onAnimationStart(Animation animation) {
-                //动画开始
-            }
-            public void onAnimationRepeat(Animation animation) {
-                //动画循环
-            }
-            public void onAnimationEnd(Animation animation) {
-                try {
-                    init();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        return anim;
-    }
+//    @Override
+//    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+//        if (nextAnim == 0){
+//            return null;
+//        }
+//        Animation anim = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+//        anim.setAnimationListener(new Animation.AnimationListener() {
+//            public void onAnimationStart(Animation animation) {
+//                //动画开始
+//            }
+//            public void onAnimationRepeat(Animation animation) {
+//                //动画循环
+//            }
+//            public void onAnimationEnd(Animation animation) {
+//                try {
+//                    init();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//        return anim;
+//    }
 
-    @Override
-    public void setUserVisibleHint(boolean isVisibleToUser) {
-        if (isVisibleToUser){
-            if (mBackgroundThread == null && hasUiPrepared){
-                try {
-                    init();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            hasInit = hasUiPrepared;
-        }
-        else{
-            closeCamera();
-            stopBackgroundThread();
-        }
-        super.setUserVisibleHint(isVisibleToUser);
-    }
+//    @Override
+//    public void setUserVisibleHint(boolean isVisibleToUser) {
+//        if (isVisibleToUser){
+//            if (mBackgroundThread == null && hasUiPrepared){
+//                try {
+//                    init();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//            hasInit = hasUiPrepared;
+//        }
+//        else{
+//            closeCamera();
+//            stopBackgroundThread();
+//        }
+//        super.setUserVisibleHint(isVisibleToUser);
+//    }
 
     private void init() throws IOException {
         if (simpleDraweeView.getWidth() == 0){
             hasInit = false;
             return;
         }
+        hasInit = true;
 
         System.out.println("start!BackgroundThread");
         startBackgroundThread();
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         } else {
             mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
@@ -586,7 +587,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                     .setImageRequest(request).build());
             simpleDraweeView.setAlpha(MainActivity.alpha);
         }
-        hasInit = true;
     }
 
     @Override
@@ -597,13 +597,13 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
         if (MainFragment.themeColor != null){
             btn_capture.setBackgroundTintList(ColorStateList.valueOf(MainFragment.themeColor[0]));
         }
-        if (!hasInit){
-            try {
-                init();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if (!hasInit){
+//            try {
+//                init();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     @Override
