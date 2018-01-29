@@ -407,7 +407,7 @@ public class NewAlbumFragment extends Fragment implements View.OnClickListener {
         if ((albumname == null
                 && (et_albumname.getText().toString().equals("") || !isTookPic || (tv_picktime.getText().toString().equals("") && !str_cyc.equals("不设置"))))
         || ((albumname != null)
-                && (tv_picktime.getText().toString().equals("")))){
+                && (tv_picktime.getText().toString().equals("")) && (!str_cyc.equals("不设置")))){
             System.out.println("dismiss");
             if (btn_commit.getVisibility() == View.VISIBLE){
                 Animation animation = AnimationUtils.loadAnimation(getActivity(),R.anim.fm_pop_exit);
