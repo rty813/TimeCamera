@@ -276,7 +276,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
+            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile, mSucceed));
         }
 
     };
@@ -1004,7 +1004,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                                                @NonNull TotalCaptureResult result) {
                     Log.d(TAG, mFile.toString());
                     unlockFocus();
-                    mSucceed.onSucceed(mFile.getAbsolutePath());
+//                    mSucceed.onSucceed(mFile.getAbsolutePath());
                 }
             };
 
@@ -1091,10 +1091,12 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
          * The file we save the image into.
          */
         private final File mFile;
+        private final onCaptureSucceed mSucceed;
 
-        ImageSaver(Image image, File file) {
+        ImageSaver(Image image, File file, onCaptureSucceed succeed) {
             mImage = image;
             mFile = file;
+            mSucceed = succeed;
         }
 
         @Override
@@ -1117,6 +1119,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener, Ac
                         e.printStackTrace();
                     }
                 }
+                mSucceed.onSucceed(mFile.getAbsolutePath());
+
             }
         }
 
